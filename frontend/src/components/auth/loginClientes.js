@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/auth.css';
+import { apiFetch, api } from '../utils/api.js';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const LoginClientes = () => {
   const [credenciales, setCredenciales] = useState({ email: '', password: '' });
   const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -16,80 +17,51 @@ const LoginClientes = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setCargando(true);
-    const ok = await loginConBackend();
-    if (!ok) usarLoginLocal();
-    setCargando(false);
-  };
+    setError('');
 
-  // Intenta login con backend. Devuelve true si autenticó, false si no.
-  const loginConBackend = async () => {
     try {
-      const resp = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credenciales),
-      });
-      const data = await resp.json();
+      // 🔐 login público (sin Authorization)
+      const data = await api.post('/api/auth/login', credenciales, { auth: false });
+
       if (data?.success && data?.user) {
+        // guarda token si viene
+        if (data.token) localStorage.setItem('authToken', data.token);
+        localStorage.setItem('userData', JSON.stringify(data.user));
         manejarLoginExitoso(data.user);
-        return true;
+      } else {
+        setError(data?.message || 'Credenciales incorrectas');
       }
-      return false;
-    } catch {
-      return false;
+    } catch (err) {
+      setError(err.message || 'No se pudo conectar con el servidor');
+    } finally {
+      setCargando(false);
     }
   };
 
   const manejarLoginExitoso = (userData) => {
+    // limpia banderas antiguas
+    localStorage.removeItem('adminLoggedIn');
+    localStorage.removeItem('tecnicoLoggedIn');
+    localStorage.removeItem('clienteLoggedIn');
+    localStorage.removeItem('clienteActual');
+
     if (userData.rol === 'admin') {
       localStorage.setItem('adminLoggedIn', 'true');
       localStorage.setItem('userData', JSON.stringify(userData));
       navigate('/admin/menu');
-    } else if (userData.rol === 'tecnico') {
+      return;
+    }
+    if (userData.rol === 'tecnico') {
       localStorage.setItem('tecnicoLoggedIn', 'true');
       localStorage.setItem('userData', JSON.stringify(userData));
       navigate('/tecnico/panel');
-    } else if (userData.rol === 'cliente') {
-      localStorage.setItem('clienteActual', JSON.stringify(userData));
-      localStorage.setItem('clienteLoggedIn', 'true');
-      setCredenciales({ email: '', password: '' });
-      navigate('/');
-      alert(`Bienvenido ${userData.nombre}!`);
-    }
-  };
-
-  // Respaldo local (sin carteles ni banners)
-  const usarLoginLocal = () => {
-    // Admin demo
-    if (credenciales.email === 'admin@infoser.cl') {
-      manejarLoginExitoso({
-        id: 1,
-        email: 'admin@infoser.cl',
-        nombre: 'Administrador INFOSER',
-        rol: 'admin',
-      });
       return;
     }
-    // Técnico demo
-    if (credenciales.email === 'juan.alvarez@infoser.cl') {
-      manejarLoginExitoso({
-        id: 2,
-        email: 'juan.alvarez@infoser.cl',
-        nombre: 'Juan Alvarez',
-        rol: 'tecnico',
-      });
-      return;
-    }
-    // Cliente registrado en localStorage
-    const clientes = JSON.parse(localStorage.getItem('clientesRegistrados')) || [];
-    const encontrado = clientes.find(
-      (c) => c.email === credenciales.email && c.password === credenciales.password
-    );
-    if (encontrado) {
-      manejarLoginExitoso({ ...encontrado, rol: 'cliente' });
-    } else {
-      alert('Email o contraseña incorrectos. Por favor regístrese primero.');
-    }
+    // cliente
+    localStorage.setItem('clienteActual', JSON.stringify(userData));
+    localStorage.setItem('clienteLoggedIn', 'true');
+    setCredenciales({ email: '', password: '' });
+    navigate('/');
   };
 
   return (
@@ -141,6 +113,8 @@ const LoginClientes = () => {
                 <a href="#recuperar">¿Olvidó su contraseña?</a>
               </div>
             </div>
+
+            {error && <div className="error-text-client" style={{ marginBottom: 12 }}>{error}</div>}
 
             <button type="submit" className="btn-login-client" disabled={cargando}>
               {cargando ? (

@@ -1,172 +1,234 @@
+// backend/src/server.js
+
 const express = require('express');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
+
+// ✅ usa los módulos centralizados que ya creaste
+const { emitirToken } = require('./utils/jwt');
+const { verifyJWT, requireRole } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10);
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Configuración de PostgreSQL
+// PostgreSQL
 const { Pool } = require('pg');
-
 const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
   host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'infoser_db',
-  password: process.env.DB_PASSWORD || 'tu_password',
+  database: process.env.DB_NAME || 'infoser_ep_spa',
+  password: process.env.DB_PASSWORD || 'Falcon', // ← tu clave
   port: process.env.DB_PORT || 5432,
 });
+pool.on('connect', () => console.log('Conectado a PostgreSQL'));
+pool.on('error', (err) => console.error('Error de conexión PostgreSQL:', err));
 
-// Verificar conexión a la base de datos
-pool.on('connect', () => {
-  console.log('✅ Conectado a PostgreSQL');
+// Utils
+const normEmail = (e) => (typeof e === 'string' ? e.trim().toLowerCase() : '');
+
+// -------------------------------------------------------------------
+// HEALTH
+// -------------------------------------------------------------------
+app.get('/api/health', async (_req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({
+      success: true,
+      message: 'Backend INFOSER funcionando',
+      timestamp: new Date().toISOString(),
+      database: 'PostgreSQL conectado',
+    });
+  } catch {
+    res.status(500).json({ success: false, message: 'DB no disponible' });
+  }
 });
 
-pool.on('error', (err) => {
-  console.error('❌ Error de conexión PostgreSQL:', err);
-});
+// -------------------------------------------------------------------
+// AUTENTICACIÓN
+// -------------------------------------------------------------------
 
-// Ruta de prueba
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'Backend INFOSER funcionando!',
-    timestamp: new Date().toISOString(),
-    database: 'PostgreSQL conectado'
-  });
-});
-
-// Ruta de login - MEJORADA con PostgreSQL
+// LOGIN (usuarios: administrador/técnico y clientes)
 app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-  
-  console.log('Intento de login:', email);
-  
-  try {
-    // Buscar en la tabla de usuarios (admin y técnicos)
-    const usuarioResult = await pool.query(
-      'SELECT * FROM usuarios WHERE email = $1 AND activo = true',
-      [email]
-    );
-    
-    if (usuarioResult.rows.length > 0) {
-      const usuario = usuarioResult.rows[0];
-      // En producción, deberías comparar con bcrypt
-      if (password === 'password123') { // Contraseña temporal
-        return res.json({
-          success: true,
-          user: {
-            id: usuario.id,
-            email: usuario.email,
-            nombre: usuario.nombre,
-            rol: usuario.rol,
-            telefono: usuario.telefono,
-            especialidad: usuario.especialidad
-          },
-          message: `Login ${usuario.rol} exitoso`
-        });
-      }
-    }
-    
-    // Buscar en la tabla de clientes
-    const clienteResult = await pool.query(
-      'SELECT * FROM clientes WHERE email = $1 AND activo = true',
-      [email]
-    );
-    
-    if (clienteResult.rows.length > 0) {
-      const cliente = clienteResult.rows[0];
-      if (password === 'password123') { // Contraseña temporal
-        return res.json({
-          success: true,
-          user: {
-            id: cliente.id,
-            email: cliente.email,
-            nombre: cliente.nombre,
-            rol: 'cliente',
-            telefono: cliente.telefono
-          },
-          message: 'Login cliente exitoso'
-        });
-      }
-    }
-    
-    res.status(401).json({
-      success: false,
-      message: 'Credenciales incorrectas'
-    });
-    
-  } catch (error) {
-    console.error('Error en login:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    });
-  }
-});
+  const email = normEmail(req.body?.email);
+  const password = req.body?.password;
 
-// Ruta de registro REAL con PostgreSQL
-app.post('/api/auth/register', async (req, res) => {
-  const { nombre, email, password, telefono } = req.body;
-  
-  console.log('Datos de registro recibidos:', { nombre, email, telefono });
-  
-  if (!nombre || !email || !password || !telefono) {
-    return res.status(400).json({
-      success: false,
-      message: 'Todos los campos son obligatorios'
-    });
+  if (!email || typeof password !== 'string' || password.length === 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: 'Email y contraseña son obligatorios' });
   }
-  
+
   try {
-    const emailCheck = await pool.query(
-      'SELECT id FROM clientes WHERE email = $1',
+    // 1) Usuarios internos (administrador / técnico)
+    const u = await pool.query(
+      `SELECT id, email, password_hash, nombre, rol, telefono, especialidad, activo
+       FROM usuarios
+       WHERE email = $1 AND activo = true`,
       [email]
     );
-    
-    if (emailCheck.rows.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Este email ya está registrado'
+
+    if (u.rows.length) {
+      const usuario = u.rows[0];
+      const ok = await bcrypt.compare(password, usuario.password_hash);
+      if (!ok) return res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
+
+      return res.json({
+        success: true,
+        user: {
+          id: usuario.id,
+          email: usuario.email,
+          nombre: usuario.nombre,
+          rol: usuario.rol,                 // 'administrador' | 'tecnico'
+          telefono: usuario.telefono,
+          especialidad: usuario.especialidad,
+        },
+        token: emitirToken({
+          id: usuario.id,
+          email: usuario.email,
+          rol: usuario.rol,
+          tipo: 'usuario',
+          nombre: usuario.nombre,
+        }),
+        message: `Login ${usuario.rol} exitoso`,
       });
     }
-    
-    const result = await pool.query(
-      `INSERT INTO clientes (email, password_hash, nombre, telefono) 
-       VALUES ($1, $2, $3, $4) 
-       RETURNING id, email, nombre, telefono, fecha_registro`,
-      [email, password, nombre, telefono]
+
+    // 2) Clientes
+    const c = await pool.query(
+      `SELECT id, email, password_hash, nombre, telefono, activo
+       FROM clientes
+       WHERE email = $1 AND activo = true`,
+      [email]
     );
-    
-    const nuevoCliente = result.rows[0];
-    
+
+    if (c.rows.length) {
+      const cliente = c.rows[0];
+      const ok = await bcrypt.compare(password, cliente.password_hash);
+      if (!ok) return res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
+
+      return res.json({
+        success: true,
+        user: {
+          id: cliente.id,
+          email: cliente.email,
+          nombre: cliente.nombre,
+          rol: 'cliente',
+          telefono: cliente.telefono,
+        },
+        token: emitirToken({
+          id: cliente.id,
+          email: cliente.email,
+          rol: 'cliente',
+          tipo: 'cliente',
+          nombre: cliente.nombre,
+        }),
+        message: 'Login cliente exitoso',
+      });
+    }
+
+    return res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// PERFIL del usuario autenticado
+app.get('/api/auth/me', verifyJWT, async (req, res) => {
+  try {
+    const { id, tipo } = req.user;
+
+    if (tipo === 'usuario') {
+      const r = await pool.query(
+        'SELECT id, email, nombre, rol, telefono, especialidad, activo FROM usuarios WHERE id = $1',
+        [id]
+      );
+      if (!r.rows.length) return res.status(404).json({ success: false, message: 'No encontrado' });
+      return res.json({ success: true, user: { ...r.rows[0] } });
+    }
+
+    // tipo === 'cliente'
+    const r = await pool.query(
+      'SELECT id, email, nombre, telefono, activo, fecha_registro FROM clientes WHERE id = $1',
+      [id]
+    );
+    if (!r.rows.length) return res.status(404).json({ success: false, message: 'No encontrado' });
+    return res.json({ success: true, user: { ...r.rows[0], rol: 'cliente' } });
+  } catch (e) {
+    console.error('Error /me:', e);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// REGISTRO CLIENTE
+app.post('/api/auth/register', async (req, res) => {
+  const nombre = (req.body?.nombre || '').trim();
+  const email = normEmail(req.body?.email);
+  const password = req.body?.password;
+  const telefono = (req.body?.telefono || '').trim();
+
+  if (!nombre || !email || !password || !telefono) {
+    return res.status(400).json({ success: false, message: 'Todos los campos son obligatorios' });
+  }
+
+  try {
+    const existsCliente = await pool.query('SELECT 1 FROM clientes WHERE email = $1', [email]);
+    if (existsCliente.rows.length) {
+      return res.status(400).json({ success: false, message: 'Este email ya está registrado como cliente' });
+    }
+
+    const existsUsuario = await pool.query('SELECT 1 FROM usuarios WHERE email = $1', [email]);
+    if (existsUsuario.rows.length) {
+      return res.status(400).json({ success: false, message: 'Este email pertenece a un usuario interno del sistema' });
+    }
+
+    const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    const result = await pool.query(
+      `INSERT INTO clientes (email, password_hash, nombre, telefono, activo)
+       VALUES ($1, $2, $3, $4, true)
+       RETURNING id, email, nombre, telefono, fecha_registro`,
+      [email, hash, nombre, telefono]
+    );
+
+    const cli = result.rows[0];
+
     res.json({
       success: true,
       message: 'Registro exitoso',
       user: {
-        id: nuevoCliente.id,
-        nombre: nuevoCliente.nombre,
-        email: nuevoCliente.email,
-        telefono: nuevoCliente.telefono,
+        id: cli.id,
+        nombre: cli.nombre,
+        email: cli.email,
+        telefono: cli.telefono,
         rol: 'cliente',
-        fechaRegistro: nuevoCliente.fecha_registro
-      }
+        fechaRegistro: cli.fecha_registro,
+      },
+      token: emitirToken({
+        id: cli.id,
+        email: cli.email,
+        rol: 'cliente',
+        tipo: 'cliente',
+        nombre: cli.nombre,
+      }),
     });
-    
   } catch (error) {
     console.error('Error en registro:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    });
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });
 
-// Ruta para crear solicitud REAL con PostgreSQL
-app.post('/api/solicitudes', async (req, res) => {
+// -------------------------------------------------------------------
+// SOLICITUDES (protegidas)
+// -------------------------------------------------------------------
+
+// Crear solicitud (autenticado). Si es cliente, se fuerza su propio id.
+app.post('/api/solicitudes', verifyJWT, async (req, res) => {
   const {
     titulo,
     descripcion,
@@ -177,207 +239,133 @@ app.post('/api/solicitudes', async (req, res) => {
     prioridad,
     equipos_solicitados,
     comentarios_finales,
-    cliente_id,
-    cliente_nombre,
-    cliente_email
+    cliente_id: clienteIdBody,
   } = req.body;
 
-  console.log('Nueva solicitud recibida:', { titulo, cliente_nombre });
-
   if (!titulo || !descripcion || !direccion_servicio || !comuna || !region || !tipo_servicio) {
-    return res.status(400).json({
-      success: false,
-      message: 'Faltan campos obligatorios'
-    });
+    return res.status(400).json({ success: false, message: 'Faltan campos obligatorios' });
   }
+
+  // si es cliente, no permitimos suplantar
+  const cliente_id = req.user.rol === 'cliente' ? req.user.id : (clienteIdBody || null);
 
   try {
     const result = await pool.query(
-      `INSERT INTO solicitudes 
-       (cliente_id, direccion_servicio, comuna, region, titulo, descripcion, 
-        tipo_servicio, prioridad, equipos_solicitados, comentarios_finales) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+      `INSERT INTO solicitudes
+       (cliente_id, direccion_servicio, comuna, region, titulo, descripcion,
+        tipo_servicio, prioridad, equipos_solicitados, comentarios_finales)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        RETURNING *`,
-      [cliente_id, direccion_servicio, comuna, region, titulo, descripcion,
-       tipo_servicio, prioridad, equipos_solicitados, comentarios_finales]
+      [
+        cliente_id,
+        direccion_servicio,
+        comuna,
+        region,
+        titulo,
+        descripcion,
+        tipo_servicio,
+        prioridad,
+        equipos_solicitados,
+        comentarios_finales,
+      ]
     );
-
-    const nuevaSolicitud = result.rows[0];
-
-    res.json({
-      success: true,
-      message: 'Solicitud creada exitosamente',
-      solicitud: nuevaSolicitud
-    });
-    
+    res.json({ success: true, message: 'Solicitud creada exitosamente', solicitud: result.rows[0] });
   } catch (error) {
     console.error('Error creando solicitud:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    });
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });
 
-// Ruta para obtener solicitudes por cliente REAL
-app.get('/api/solicitudes/cliente/:clienteId', async (req, res) => {
+// Listar solicitudes del cliente autenticado
+app.get('/api/solicitudes/cliente/:clienteId', verifyJWT, async (req, res) => {
   const { clienteId } = req.params;
-  
-  console.log('Solicitando solicitudes del cliente:', clienteId);
-  
+
+  // Un cliente solo puede ver las suyas
+  if (req.user.rol === 'cliente' && String(req.user.id) !== String(clienteId)) {
+    return res.status(403).json({ success: false, message: 'Sin permisos' });
+  }
+
   try {
     const result = await pool.query(
       'SELECT * FROM solicitudes WHERE cliente_id = $1 ORDER BY fecha_solicitud DESC',
       [clienteId]
     );
-
-    res.json({
-      success: true,
-      solicitudes: result.rows
-    });
-    
+    res.json({ success: true, solicitudes: result.rows });
   } catch (error) {
     console.error('Error obteniendo solicitudes:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    });
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });
 
-// Ruta para obtener todas las solicitudes (admin)
-app.get('/api/solicitudes', async (req, res) => {
-  console.log('Solicitando todas las solicitudes');
-  
+// Todas las solicitudes (solo administrador)
+app.get('/api/solicitudes', verifyJWT, requireRole('administrador'), async (_req, res) => {
   try {
     const result = await pool.query(
-      `SELECT s.*, c.nombre as cliente_nombre, c.email as cliente_email, 
-              u.nombre as tecnico_nombre
+      `SELECT s.*, c.nombre AS cliente_nombre, c.email AS cliente_email,
+              u.nombre AS tecnico_nombre
        FROM solicitudes s
        LEFT JOIN clientes c ON s.cliente_id = c.id
        LEFT JOIN usuarios u ON s.tecnico_id = u.id
        ORDER BY s.fecha_solicitud DESC`
     );
-
-    res.json({
-      success: true,
-      solicitudes: result.rows
-    });
-    
+    res.json({ success: true, solicitudes: result.rows });
   } catch (error) {
     console.error('Error obteniendo solicitudes:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    });
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });
 
-// Ruta para obtener clientes (admin)
-app.get('/api/clientes', async (req, res) => {
-  console.log('Solicitando lista de clientes');
-  
-  try {
-    const result = await pool.query(
-      'SELECT id, nombre, email, telefono, fecha_registro FROM clientes ORDER BY fecha_registro DESC'
-    );
-
-    res.json({
-      success: true,
-      clientes: result.rows
-    });
-    
-  } catch (error) {
-    console.error('Error obteniendo clientes:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    });
-  }
-});
-
-// Ruta para obtener técnicos
-app.get('/api/tecnicos', async (req, res) => {
-  console.log('Solicitando lista de técnicos');
-  
+// Listar técnicos (solo administrador)
+app.get('/api/tecnicos', verifyJWT, requireRole('administrador'), async (_req, res) => {
   try {
     const result = await pool.query(
       'SELECT id, nombre, email, telefono, especialidad FROM usuarios WHERE rol = $1 AND activo = true',
       ['tecnico']
     );
-
-    res.json({
-      success: true,
-      tecnicos: result.rows
-    });
-    
+    res.json({ success: true, tecnicos: result.rows });
   } catch (error) {
     console.error('Error obteniendo técnicos:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    });
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });
 
-// Ruta para actualizar estado de solicitud
-app.put('/api/solicitudes/:id', async (req, res) => {
+// Actualizar estado/tecnico (admin o técnico)
+app.put('/api/solicitudes/:id', verifyJWT, requireRole('administrador', 'tecnico'), async (req, res) => {
   const { id } = req.params;
   const { estado_actual, tecnico_id } = req.body;
-  
-  console.log('Actualizando solicitud:', id, 'Estado:', estado_actual);
-  
+
   try {
     const result = await pool.query(
-      `UPDATE solicitudes 
+      `UPDATE solicitudes
        SET estado_actual = $1, tecnico_id = $2, fecha_actualizacion = CURRENT_TIMESTAMP
-       WHERE id = $3 
+       WHERE id = $3
        RETURNING *`,
       [estado_actual, tecnico_id, id]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Solicitud no encontrada'
-      });
+    if (!result.rows.length) {
+      return res.status(404).json({ success: false, message: 'Solicitud no encontrada' });
     }
-
-    res.json({
-      success: true,
-      message: 'Solicitud actualizada exitosamente',
-      solicitud: result.rows[0]
-    });
-    
+    res.json({ success: true, message: 'Solicitud actualizada exitosamente', solicitud: result.rows[0] });
   } catch (error) {
     console.error('Error actualizando solicitud:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor'
-    });
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });
 
-// ✅ Manejo de rutas no encontradas (versión corregida)
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Ruta no encontrada'
-  });
+// -------------------------------------------------------------------
+// 404 + ERROR
+// -------------------------------------------------------------------
+app.use((_req, res) => {
+  res.status(404).json({ success: false, message: 'Ruta no encontrada' });
 });
 
-// Manejo de errores global
-app.use((err, req, res, next) => {
+app.use((err, _req, res, _next) => {
   console.error('Error en el servidor:', err);
-  res.status(500).json({
-    success: false,
-    message: 'Error interno del servidor'
-  });
+  res.status(500).json({ success: false, message: 'Error interno del servidor' });
 });
 
-// Iniciar servidor
+// -------------------------------------------------------------------
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor INFOSER ejecutándose en: http://localhost:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🗄️  Base de datos: PostgreSQL conectado`);
+  console.log(`Servidor INFOSER ejecutándose en: http://localhost:${PORT}`);
 });

@@ -1,288 +1,248 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import "../styles/adminSolicitudes.css";
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { apiFetch, api } from '../components/utils/api.js';
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const ESTADOS = ['pendiente', 'en_proceso', 'completada', 'cancelada'];
 
-const AdminSolicitudes = () => {
+export default function AdminSolicitudes() {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
   const [solicitudes, setSolicitudes] = useState([]);
-  const [filtroEstado, setFiltroEstado] = useState("todos");
-  const [backendDisponible, setBackendDisponible] = useState(false);
+  const [tecnicos, setTecnicos] = useState([]);
+  const [filtro, setFiltro] = useState('');
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(null); // id que se está guardando
+  const [error, setError] = useState('');
 
-  // ===============================
-  // 🔹 Verificar conexión al backend
-  // ===============================
-  const verificarBackend = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/health`);
-      const data = await res.json();
-      setBackendDisponible(data.success);
-    } catch {
-      setBackendDisponible(false);
-    }
-  };
-
-  // ===============================
-  // 🔹 Cargar solicitudes (API o local)
-  // ===============================
-  const cargarSolicitudes = async () => {
-    if (backendDisponible) {
-      try {
-        const res = await fetch(`${API_URL}/api/solicitudes`);
-        const data = await res.json();
-        if (data.success && Array.isArray(data.solicitudes)) {
-          setSolicitudes(data.solicitudes);
-        } else {
-          setSolicitudes([]);
-        }
-      } catch (error) {
-        console.error("Error cargando solicitudes desde backend:", error);
-        setSolicitudes(obtenerSolicitudesLocales());
-      }
-    } else {
-      setSolicitudes(obtenerSolicitudesLocales());
-    }
-  };
-
-  // 🔹 Cargar datos locales si no hay backend
-  const obtenerSolicitudesLocales = () => {
-    return JSON.parse(localStorage.getItem("solicitudesCliente")) || [];
-  };
-
+  // Cargar usuario y proteger ruta
   useEffect(() => {
-    verificarBackend().then(() => cargarSolicitudes());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [backendDisponible]);
+    const u = JSON.parse(localStorage.getItem('userData') || 'null');
+    if (!u || (u.rol !== 'administrador' && u.rol !== 'admin')) {
+      navigate('/login'); // no admin → fuera
+      return;
+    }
+    setUser(u);
+  }, [navigate]);
 
-  const solicitudesFiltradas =
-    filtroEstado === "todos"
-      ? solicitudes
-      : solicitudes.filter(
-          (s) =>
-            s.estado_actual === filtroEstado || s.estado === filtroEstado
-        );
+  // Cargar datos iniciales
+  useEffect(() => {
+    (async () => {
+      try {
+        setCargando(true);
+        const [sol, tec] = await Promise.all([
+          api.get('/api/solicitudes'),
+          api.get('/api/tecnicos'),
+        ]);
+        setSolicitudes(sol.solicitudes || []);
+        setTecnicos(tec.tecnicos || []);
+      } catch (err) {
+        setError(err.message || 'No se pudieron cargar los datos');
+      } finally {
+        setCargando(false);
+      }
+    })();
+  }, []);
+
+  const solicitudesFiltradas = useMemo(() => {
+    const q = filtro.trim().toLowerCase();
+    if (!q) return solicitudes;
+    return solicitudes.filter((s) =>
+      [
+        s.titulo,
+        s.descripcion,
+        s.comuna,
+        s.region,
+        s.tipo_servicio,
+        s.estado_actual,
+        s?.cliente_nombre,
+        s?.cliente_email,
+        s?.tecnico_nombre,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [filtro, solicitudes]);
+
+  const actualizarSolicitud = async (id, payload) => {
+    try {
+      setGuardando(id);
+      const res = await api.put(`/api/solicitudes/${id}`, payload);
+      // refresca en memoria
+      setSolicitudes((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, ...res.solicitud } : s))
+      );
+    } catch (err) {
+      alert(err.message || 'Error al actualizar la solicitud');
+    } finally {
+      setGuardando(null);
+    }
+  };
+
+  const handleCambioEstado = (sol, nuevoEstado) => {
+    if (nuevoEstado === sol.estado_actual) return;
+    actualizarSolicitud(sol.id, {
+      estado_actual: nuevoEstado,
+      tecnico_id: sol.tecnico_id ?? null,
+    });
+  };
+
+  const handleAsignarTecnico = (sol, tecnicoId) => {
+    const tId = tecnicoId ? parseInt(tecnicoId, 10) : null;
+    actualizarSolicitud(sol.id, {
+      estado_actual: sol.estado_actual,
+      tecnico_id: tId,
+    });
+  };
+
+  const fmtFecha = (iso) => {
+    try {
+      return new Date(iso).toLocaleString('es-CL');
+    } catch {
+      return iso || '';
+    }
+  };
+
+  if (!user) return null; // todavía redirigiendo
 
   return (
-    <div className="admin-solicitudes-container">
-      <header className="admin-solicitudes-header">
-        <div className="header-content">
-          <div className="header-left">
-            <button
-              className="btn-volver"
-              onClick={() => navigate("/admin/menu")}
-            >
-              <i className="fas fa-arrow-left me-2"></i>
-              Volver al Menú
-            </button>
-            <h1>
-              <i className="fas fa-tools"></i>
-              Gestión de Solicitudes - INFOSER & EP SPA
-            </h1>
-          </div>
-
-          <div className="admin-info">
-            <span>Administrador</span>
-            <button
-              className="logout-btn"
-              onClick={() => {
-                localStorage.removeItem("adminLoggedIn");
-                navigate("/");
-              }}
-            >
-              Cerrar Sesión
-            </button>
+    <div className="container py-4">
+      <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div className="container">
+          <Link className="navbar-brand" to="/">
+            <i className="fas fa-shield-alt me-2"></i>
+            <strong>INFOSER</strong> & EP SPA
+          </Link>
+          <div className="navbar-nav ms-auto">
+            <span className="nav-link text-light">
+              <i className="fas fa-user-shield me-1"></i>
+              Admin: {user?.nombre || user?.email}
+            </span>
+            <Link className="nav-link" to="/admin/menu">Menú</Link>
           </div>
         </div>
-      </header>
+      </nav>
 
-      <div className="admin-solicitudes-layout">
-        {/* Sidebar */}
-        <nav className="admin-solicitudes-sidebar">
-          <button
-            className="sidebar-btn"
-            onClick={() => navigate("/admin/menu")}
-          >
-            <i className="fas fa-home"></i>
-            Menú Principal
-          </button>
-          <button className="sidebar-btn active">
-            <i className="fas fa-tools"></i> 📋 Solicitudes
-          </button>
-          <button
-            className="sidebar-btn"
-            onClick={() => navigate("/admin/clientes")}
-          >
-            <i className="fas fa-users"></i> 👥 Clientes
-          </button>
-          <button
-            className="sidebar-btn"
-            onClick={() => navigate("/admin/tecnicos")}
-          >
-            <i className="fas fa-user-cog"></i> 👨‍💻 Técnicos
-          </button>
-          <button
-            className="sidebar-btn"
-            onClick={() => navigate("/admin/metricas")}
-          >
-            <i className="fas fa-chart-line"></i> 📈 Métricas
-          </button>
-        </nav>
+      <h3 className="mb-3">
+        <i className="fas fa-list-check me-2"></i>
+        Gestión de Solicitudes
+      </h3>
 
-        {/* Contenido principal */}
-        <main className="admin-solicitudes-content">
-          <div className="content-header">
-            <h2>Solicitudes de Servicio</h2>
-            <div className="header-actions">
-              <div className="filtros">
-                <select
-                  value={filtroEstado}
-                  onChange={(e) => setFiltroEstado(e.target.value)}
-                  className="filtro-select"
-                >
-                  <option value="todos">Todos los estados</option>
-                  <option value="pendiente">Pendientes</option>
-                  <option value="asignada">Asignadas</option>
-                  <option value="en_progreso">En Progreso</option>
-                  <option value="completada">Completadas</option>
-                </select>
-              </div>
-
-              <button
-                className="btn-primary"
-                onClick={() => navigate("/admin/nueva-solicitud")}
-              >
-                <i className="fas fa-plus me-2"></i>
-                Nueva Solicitud
-              </button>
-            </div>
-          </div>
-
-          {/* Estadísticas */}
-          <div className="solicitudes-stats">
-            <div className="stat-card">
-              <h3>Total Solicitudes</h3>
-              <p className="stat-number">{solicitudes.length}</p>
-            </div>
-            <div className="stat-card">
-              <h3>Pendientes</h3>
-              <p className="stat-number warning">
-                {
-                  solicitudes.filter(
-                    (s) =>
-                      s.estado === "pendiente" ||
-                      s.estado_actual === "pendiente"
-                  ).length
-                }
-              </p>
-            </div>
-            <div className="stat-card">
-              <h3>En Progreso</h3>
-              <p className="stat-number info">
-                {
-                  solicitudes.filter(
-                    (s) =>
-                      s.estado === "en_progreso" ||
-                      s.estado_actual === "en_progreso"
-                  ).length
-                }
-              </p>
-            </div>
-            <div className="stat-card">
-              <h3>Completadas</h3>
-              <p className="stat-number success">
-                {
-                  solicitudes.filter(
-                    (s) =>
-                      s.estado === "completada" ||
-                      s.estado_actual === "completada"
-                  ).length
-                }
-              </p>
-            </div>
-          </div>
-
-          {/* Lista de Solicitudes */}
-          <div className="solicitudes-list">
-            {solicitudesFiltradas.length > 0 ? (
-              solicitudesFiltradas.map((s) => (
-                <div key={s.id} className="solicitud-card">
-                  <div className="solicitud-header">
-                    <div className="solicitud-info">
-                      <h4>
-                        Solicitud #{s.id || "---"} -{" "}
-                        {s.cliente_nombre || s.cliente || "Desconocido"}
-                      </h4>
-                      <p className="solicitud-desc">
-                        {s.descripcion || "Sin descripción"}
-                      </p>
-                      <div className="solicitud-meta">
-                        <span>
-                          <i className="fas fa-map-marker-alt"></i>{" "}
-                          {s.direccion_servicio || s.direccion || "Sin dirección"}
-                        </span>
-                        <span>
-                          <i className="fas fa-calendar"></i>{" "}
-                          {new Date(
-                            s.fecha_solicitud || s.fecha || Date.now()
-                          ).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="solicitud-estado">
-                      <span
-                        className={`estado-badge ${
-                          s.estado || s.estado_actual || "pendiente"
-                        }`}
-                      >
-                        {(s.estado || s.estado_actual || "pendiente").replace(
-                          "_",
-                          " "
-                        )}
-                      </span>
-                      <span
-                        className={`prioridad-badge ${s.prioridad || "media"}`}
-                      >
-                        {s.prioridad || "media"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="solicitud-footer">
-                    <div className="solicitud-actions">
-                      <button className="btn-action" title="Ver detalles">
-                        <i className="fas fa-eye"></i>
-                      </button>
-                      <button className="btn-action" title="Asignar técnico">
-                        <i className="fas fa-user-cog"></i>
-                      </button>
-                      <button className="btn-action" title="Editar">
-                        <i className="fas fa-edit"></i>
-                      </button>
-                    </div>
-                    <div className="solicitud-tecnico">
-                      {s.tecnico ? (
-                        <span>Técnico: {s.tecnico}</span>
-                      ) : (
-                        <span className="sin-tecnico">
-                          Sin técnico asignado
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-muted mt-5">
-                No hay solicitudes registradas.
-              </p>
-            )}
-          </div>
-        </main>
+      <div className="d-flex align-items-center gap-2 mb-3">
+        <input
+          className="form-control"
+          placeholder="Buscar por título, cliente, comuna, estado..."
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+          style={{ maxWidth: 420 }}
+        />
+        <span className="text-muted">
+          {solicitudesFiltradas.length} de {solicitudes.length}
+        </span>
       </div>
+
+      {error && <div className="alert alert-danger">{error}</div>}
+      {cargando ? (
+        <div className="text-muted">Cargando...</div>
+      ) : solicitudesFiltradas.length === 0 ? (
+        <div className="alert alert-info">No hay solicitudes.</div>
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Título</th>
+                <th>Cliente</th>
+                <th>Ubicación</th>
+                <th>Tipo</th>
+                <th>Prioridad</th>
+                <th>Estado</th>
+                <th>Técnico</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {solicitudesFiltradas.map((s) => (
+                <tr key={s.id}>
+                  <td>{s.id}</td>
+                  <td>
+                    <div className="small">{fmtFecha(s.fecha_solicitud)}</div>
+                  </td>
+                  <td>
+                    <div className="fw-semibold">{s.titulo}</div>
+                    <div className="text-muted small text-truncate" style={{maxWidth: 320}}>
+                      {s.descripcion}
+                    </div>
+                  </td>
+                  <td>
+                    <div>{s.cliente_nombre || '-'}</div>
+                    <div className="small text-muted">{s.cliente_email || ''}</div>
+                  </td>
+                  <td>
+                    <div>{s.comuna}</div>
+                    <div className="small text-muted">{s.region}</div>
+                  </td>
+                  <td>{s.tipo_servicio}</td>
+                  <td>
+                    <span className={
+                      'badge ' +
+                      (s.prioridad === 'alta' ? 'bg-danger' :
+                       s.prioridad === 'media' ? 'bg-warning text-dark' :
+                       'bg-info')
+                    }>
+                      {s.prioridad}
+                    </span>
+                  </td>
+                  <td style={{ minWidth: 160 }}>
+                    <select
+                      className="form-select form-select-sm"
+                      value={s.estado_actual || 'pendiente'}
+                      onChange={(e) => handleCambioEstado(s, e.target.value)}
+                      disabled={guardando === s.id}
+                    >
+                      {ESTADOS.map((st) => (
+                        <option key={st} value={st}>{st}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td style={{ minWidth: 220 }}>
+                    <select
+                      className="form-select form-select-sm"
+                      value={s.tecnico_id || ''}
+                      onChange={(e) => handleAsignarTecnico(s, e.target.value)}
+                      disabled={guardando === s.id}
+                    >
+                      <option value="">— Sin asignar —</option>
+                      {tecnicos.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.nombre} ({t.email})
+                        </option>
+                      ))}
+                    </select>
+                    {s.tecnico_nombre && (
+                      <div className="small text-muted mt-1">
+                        Asignado: {s.tecnico_nombre}
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ minWidth: 120 }}>
+                    <button
+                      className="btn btn-sm btn-outline-secondary"
+                      disabled
+                      title="(Futuro) Ver detalle"
+                    >
+                      <i className="fas fa-eye"></i>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
-};
-
-export default AdminSolicitudes;
+}
