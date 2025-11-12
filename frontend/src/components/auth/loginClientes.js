@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/auth.css';
-import { apiFetch, api } from '../utils/api.js';
-
+import { api } from '../../utils/api.js'; // 👈 usa el helper real y evita importar apiFetch si no lo usas
 
 const LoginClientes = () => {
   const [credenciales, setCredenciales] = useState({ email: '', password: '' });
@@ -20,11 +19,11 @@ const LoginClientes = () => {
     setError('');
 
     try {
-      // 🔐 login público (sin Authorization)
+      // 🔐 login público (no manda Authorization)
       const data = await api.post('/api/auth/login', credenciales, { auth: false });
 
       if (data?.success && data?.user) {
-        // guarda token si viene
+        // guarda token + usuario
         if (data.token) localStorage.setItem('authToken', data.token);
         localStorage.setItem('userData', JSON.stringify(data.user));
         manejarLoginExitoso(data.user);
@@ -45,23 +44,26 @@ const LoginClientes = () => {
     localStorage.removeItem('clienteLoggedIn');
     localStorage.removeItem('clienteActual');
 
-    if (userData.rol === 'admin') {
+    // ⚠️ Importante: el backend devuelve 'administrador' | 'tecnico' | 'cliente'
+    if (userData.rol === 'administrador') {
       localStorage.setItem('adminLoggedIn', 'true');
       localStorage.setItem('userData', JSON.stringify(userData));
-      navigate('/admin/menu');
+      navigate('/admin/menu'); // ruta de admin
       return;
     }
+
     if (userData.rol === 'tecnico') {
       localStorage.setItem('tecnicoLoggedIn', 'true');
       localStorage.setItem('userData', JSON.stringify(userData));
-      navigate('/tecnico/panel');
+      navigate('/tecnico/panel'); // ruta de técnico
       return;
     }
+
     // cliente
     localStorage.setItem('clienteActual', JSON.stringify(userData));
     localStorage.setItem('clienteLoggedIn', 'true');
     setCredenciales({ email: '', password: '' });
-    navigate('/');
+    navigate('/'); // home
   };
 
   return (

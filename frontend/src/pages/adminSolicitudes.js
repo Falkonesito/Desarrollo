@@ -1,8 +1,10 @@
+// src/pages/adminSolicitudes.js
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { apiFetch, api } from '../components/utils/api.js';
+import { api } from '../utils/api.js';
 
 const ESTADOS = ['pendiente', 'en_proceso', 'completada', 'cancelada'];
+const ESTADO_RANK = { pendiente: 0, en_proceso: 1, completada: 2, cancelada: 3 };
 
 export default function AdminSolicitudes() {
   const navigate = useNavigate();
@@ -11,14 +13,19 @@ export default function AdminSolicitudes() {
   const [tecnicos, setTecnicos] = useState([]);
   const [filtro, setFiltro] = useState('');
   const [cargando, setCargando] = useState(true);
-  const [guardando, setGuardando] = useState(null); // id que se está guardando
+  const [guardando, setGuardando] = useState(null);
   const [error, setError] = useState('');
 
-  // Cargar usuario y proteger ruta
+  // Ordenamiento
+  const [sortKey, setSortKey] = useState('fecha'); // 'fecha' | 'estado'
+  const [sortDir, setSortDir] = useState('desc');  // 'asc' | 'desc'
+
+  // Guard de ruta (solo admin)
   useEffect(() => {
     const u = JSON.parse(localStorage.getItem('userData') || 'null');
-    if (!u || (u.rol !== 'administrador' && u.rol !== 'admin')) {
-      navigate('/login'); // no admin → fuera
+    const token = localStorage.getItem('authToken');
+    if (!u || !token || (u.rol !== 'administrador' && u.rol !== 'admin')) {
+      navigate('/login');
       return;
     }
     setUser(u);
@@ -43,38 +50,93 @@ export default function AdminSolicitudes() {
     })();
   }, []);
 
-  const solicitudesFiltradas = useMemo(() => {
-    const q = filtro.trim().toLowerCase();
-    if (!q) return solicitudes;
-    return solicitudes.filter((s) =>
-      [
-        s.titulo,
-        s.descripcion,
-        s.comuna,
-        s.region,
-        s.tipo_servicio,
-        s.estado_actual,
-        s?.cliente_nombre,
-        s?.cliente_email,
-        s?.tecnico_nombre,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-        .includes(q)
-    );
-  }, [filtro, solicitudes]);
+  // Helpers
+  const fechaClave = (s) => {
+    // si hay actualización úsala; si no, la de solicitud
+    const iso = s.fecha_actualizacion || s.fecha_solicitud;
+    const t = iso ? new Date(iso).getTime() : 0;
+    return Number.isFinite(t) ? t : 0;
+  };
+  const fmtFecha = (iso) => {
+    try { return new Date(iso).toLocaleString('es-CL'); } catch { return iso || ''; }
+  };
 
+  // Filtrado + Ordenamiento
+  const solicitudesVista = useMemo(() => {
+    const q = filtro.trim().toLowerCase();
+    let arr = !q
+      ? [...solicitudes]
+      : solicitudes.filter((s) =>
+          [
+            s.titulo,
+            s.descripcion,
+            s.comuna,
+            s.region,
+            s.tipo_servicio,
+            s.estado_actual,
+            s?.cliente_nombre,
+            s?.cliente_email,
+            s?.tecnico_nombre,
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase()
+            .includes(q)
+        );
+
+    arr.sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === 'fecha') {
+        cmp = fechaClave(a) - fechaClave(b);            // asc por defecto
+      } else if (sortKey === 'estado') {
+        const ra = ESTADO_RANK[a.estado_actual || 'pendiente'] ?? 0;
+        const rb = ESTADO_RANK[b.estado_actual || 'pendiente'] ?? 0;
+        cmp = ra - rb;                                   // asc por defecto
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
+    return arr;
+  }, [filtro, solicitudes, sortKey, sortDir]);
+
+  // Mutaciones
   const actualizarSolicitud = async (id, payload) => {
     try {
+      if (!id || Number.isNaN(Number(id))) {
+        alert('ID de solicitud inválido');
+        return;
+      }
+      const body = {
+        ...payload,
+        tecnico_id:
+          payload.tecnico_id === '' || payload.tecnico_id === undefined
+            ? null
+            : Number(payload.tecnico_id),
+      };
+
       setGuardando(id);
-      const res = await api.put(`/api/solicitudes/${id}`, payload);
-      // refresca en memoria
+      const res = await api.put(`/api/solicitudes/${id}`, body);
       setSolicitudes((prev) =>
         prev.map((s) => (s.id === id ? { ...s, ...res.solicitud } : s))
       );
     } catch (err) {
+      console.error('Error PUT /api/solicitudes/:id', err);
       alert(err.message || 'Error al actualizar la solicitud');
+    } finally {
+      setGuardando(null);
+    }
+  };
+
+  const enviarATecnico = async (id) => {
+    try {
+      setGuardando(id);
+      const res = await api.put(`/api/solicitudes/${id}/enviar-a-tecnico`);
+      setSolicitudes((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, ...res.solicitud } : s))
+      );
+    } catch (err) {
+      console.error('Error PUT enviar-a-tecnico', err);
+      alert(err.message || 'No se pudo enviar al técnico');
     } finally {
       setGuardando(null);
     }
@@ -96,15 +158,7 @@ export default function AdminSolicitudes() {
     });
   };
 
-  const fmtFecha = (iso) => {
-    try {
-      return new Date(iso).toLocaleString('es-CL');
-    } catch {
-      return iso || '';
-    }
-  };
-
-  if (!user) return null; // todavía redirigiendo
+  if (!user) return null;
 
   return (
     <div className="container py-4">
@@ -129,7 +183,7 @@ export default function AdminSolicitudes() {
         Gestión de Solicitudes
       </h3>
 
-      <div className="d-flex align-items-center gap-2 mb-3">
+      <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
         <input
           className="form-control"
           placeholder="Buscar por título, cliente, comuna, estado..."
@@ -137,15 +191,34 @@ export default function AdminSolicitudes() {
           onChange={(e) => setFiltro(e.target.value)}
           style={{ maxWidth: 420 }}
         />
+        <div className="d-flex align-items-center gap-2">
+          <select
+            className="form-select form-select-sm"
+            style={{ minWidth: 140 }}
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value)}
+            aria-label="Ordenar por"
+          >
+            <option value="fecha">Ordenar: Fecha</option>
+            <option value="estado">Ordenar: Estado</option>
+          </select>
+          <button
+            className="btn btn-sm btn-outline-secondary"
+            title={`Dirección: ${sortDir === 'asc' ? 'Ascendente' : 'Descendente'}`}
+            onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+          >
+            <i className={`fas fa-sort-${sortDir === 'asc' ? 'amount-up' : 'amount-down'}`}></i>
+          </button>
+        </div>
         <span className="text-muted">
-          {solicitudesFiltradas.length} de {solicitudes.length}
+          {solicitudesVista.length} de {solicitudes.length}
         </span>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
       {cargando ? (
         <div className="text-muted">Cargando...</div>
-      ) : solicitudesFiltradas.length === 0 ? (
+      ) : solicitudesVista.length === 0 ? (
         <div className="alert alert-info">No hay solicitudes.</div>
       ) : (
         <div className="table-responsive">
@@ -165,15 +238,20 @@ export default function AdminSolicitudes() {
               </tr>
             </thead>
             <tbody>
-              {solicitudesFiltradas.map((s) => (
+              {solicitudesVista.map((s) => (
                 <tr key={s.id}>
                   <td>{s.id}</td>
                   <td>
-                    <div className="small">{fmtFecha(s.fecha_solicitud)}</div>
+                    <div className="small">
+                      {fmtFecha(s.fecha_solicitud)}
+                      {s.fecha_actualizacion ? (
+                        <span className="text-muted"> • {fmtFecha(s.fecha_actualizacion)}</span>
+                      ) : null}
+                    </div>
                   </td>
                   <td>
                     <div className="fw-semibold">{s.titulo}</div>
-                    <div className="text-muted small text-truncate" style={{maxWidth: 320}}>
+                    <div className="text-muted small text-truncate" style={{ maxWidth: 320 }}>
                       {s.descripcion}
                     </div>
                   </td>
@@ -187,12 +265,16 @@ export default function AdminSolicitudes() {
                   </td>
                   <td>{s.tipo_servicio}</td>
                   <td>
-                    <span className={
-                      'badge ' +
-                      (s.prioridad === 'alta' ? 'bg-danger' :
-                       s.prioridad === 'media' ? 'bg-warning text-dark' :
-                       'bg-info')
-                    }>
+                    <span
+                      className={
+                        'badge ' +
+                        (s.prioridad === 'alta'
+                          ? 'bg-danger'
+                          : s.prioridad === 'media'
+                          ? 'bg-warning text-dark'
+                          : 'bg-info')
+                      }
+                    >
                       {s.prioridad}
                     </span>
                   </td>
@@ -228,13 +310,14 @@ export default function AdminSolicitudes() {
                       </div>
                     )}
                   </td>
-                  <td style={{ minWidth: 120 }}>
+                  <td style={{ minWidth: 140 }}>
                     <button
-                      className="btn btn-sm btn-outline-secondary"
-                      disabled
-                      title="(Futuro) Ver detalle"
+                      className="btn btn-sm btn-outline-primary"
+                      onClick={() => enviarATecnico(s.id)}
+                      disabled={guardando === s.id || !s.tecnico_id}
+                      title={!s.tecnico_id ? 'Asigna un técnico primero' : 'Enviar a técnico'}
                     >
-                      <i className="fas fa-eye"></i>
+                      <i className="fas fa-paper-plane me-1"></i> Enviar a técnico
                     </button>
                   </td>
                 </tr>
