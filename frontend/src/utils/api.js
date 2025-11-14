@@ -1,5 +1,6 @@
 // frontend/src/utils/api.js
-// Helper fetch centralizado: fuerza BASE_URL=5000 y normaliza el prefijo /api
+// Helper fetch centralizado: fuerza BASE_URL=5000 y normaliza /api
+
 const API_URL =
   (typeof process !== 'undefined' && process.env.REACT_APP_API_URL) ||
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
@@ -15,7 +16,7 @@ function normalizeUrl(path) {
 
 /** Construye una URL con query params */
 function withQuery(path, params) {
-  if (!params || typeof params !== 'object') return path;
+  if (!params || typeof params !== 'object') return normalizeUrl(path);
   const url = new URL(normalizeUrl(path));
   Object.entries(params).forEach(([k, v]) => {
     if (v === undefined || v === null) return;
@@ -28,11 +29,11 @@ function withQuery(path, params) {
 /**
  * raw(path, options)
  * options:
- *   - method: 'GET' | 'POST' | ...
- *   - body: object | FormData (si es FormData NO se serializa ni se pone Content-Type)
+ *   - method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+ *   - body: object | FormData (si es FormData NO se serializa)
  *   - headers: { ... }
- *   - auth: boolean (por defecto true). Si false, NO envía Authorization.
- *   - query: objeto con query params (opcional)
+ *   - auth: boolean (por defecto true)
+ *   - query: objeto con query params
  *   - responseType: 'json' | 'text' | 'blob' (default: json)
  */
 async function raw(path, options = {}) {
@@ -66,25 +67,21 @@ async function raw(path, options = {}) {
     ...rest,
   };
 
-  // Serializa body si es objeto plano
   if (bodyIn !== undefined) {
-    fetchOpts.body =
-      isFormData
-        ? bodyIn // deja que el navegador ponga el boundary
-        : typeof bodyIn === 'object'
-          ? JSON.stringify(bodyIn)
-          : bodyIn;
+    fetchOpts.body = isFormData
+      ? bodyIn
+      : typeof bodyIn === 'object'
+        ? JSON.stringify(bodyIn)
+        : bodyIn;
   }
 
   const res = await fetch(url, fetchOpts);
 
-  // Manejo de cuerpo según tipo de respuesta solicitado
   let data;
   try {
     if (responseType === 'blob') data = await res.blob();
     else if (responseType === 'text') data = await res.text();
     else {
-      // default json (tolera respuestas vacías)
       const txt = await res.text();
       data = txt ? JSON.parse(txt) : null;
     }
@@ -93,7 +90,6 @@ async function raw(path, options = {}) {
   }
 
   if (!res.ok) {
-    // Manejo básico de 401
     if (res.status === 401) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('userData');
@@ -117,19 +113,19 @@ export async function apiFetch(path, options = {}) {
 
 // Azúcar sintáctico (JSON)
 export const api = {
-  get: (path, opts) => raw(path, { ...(opts || {}), method: 'GET' }),
-  post: (path, body, opts) => raw(path, { ...(opts || {}), method: 'POST', body }),
-  put: (path, body, opts) => raw(path, { ...(opts || {}), method: 'PUT', body }),
-  patch: (path, body, opts) => raw(path, { ...(opts || {}), method: 'PATCH', body }),
-  del: (path, opts) => raw(path, { ...(opts || {}), method: 'DELETE' }),
+  get:   (path, opts)        => raw(path, { ...(opts || {}), method: 'GET' }),
+  post:  (path, body, opts)  => raw(path, { ...(opts || {}), method: 'POST',  body }),
+  put:   (path, body, opts)  => raw(path, { ...(opts || {}), method: 'PUT',   body }),
+  patch: (path, body, opts)  => raw(path, { ...(opts || {}), method: 'PATCH', body }),
+  del:   (path, opts)        => raw(path, { ...(opts || {}), method: 'DELETE' }),
 
-  // Variantes sin auth (para login/register públicos)
-  getNoAuth: (path, opts) => raw(path, { ...(opts || {}), method: 'GET', auth: false }),
+  // No auth
+  getNoAuth:  (path, opts)       => raw(path, { ...(opts || {}), method: 'GET',  auth: false }),
   postNoAuth: (path, body, opts) => raw(path, { ...(opts || {}), method: 'POST', body, auth: false }),
 
-  // FormData helpers
-  postForm: (path, formData, opts) => raw(path, { ...(opts || {}), method: 'POST', body: formData }),
-  putForm: (path, formData, opts) => raw(path, { ...(opts || {}), method: 'PUT', body: formData }),
+  // FormData
+  postForm:  (path, formData, opts) => raw(path, { ...(opts || {}), method: 'POST',  body: formData }),
+  putForm:   (path, formData, opts) => raw(path, { ...(opts || {}), method: 'PUT',   body: formData }),
   patchForm: (path, formData, opts) => raw(path, { ...(opts || {}), method: 'PATCH', body: formData }),
 
   // Descargas

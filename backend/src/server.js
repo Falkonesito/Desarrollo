@@ -1,5 +1,4 @@
 // backend/src/server.js
-
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
@@ -21,7 +20,7 @@ const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
   host: process.env.DB_HOST || 'localhost',
   database: process.env.DB_NAME || 'infoser_ep_spa',
-  password: process.env.DB_PASSWORD || 'Falcon', // tu clave local si estás en dev
+  password: process.env.DB_PASSWORD || 'Falcon',
   port: process.env.DB_PORT || 5432,
 });
 pool.on('connect', () => console.log('Conectado a PostgreSQL'));
@@ -55,9 +54,7 @@ app.post('/api/auth/login', async (req, res) => {
   const password = req.body?.password;
 
   if (!email || typeof password !== 'string' || password.length === 0) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Email y contraseña son obligatorios' });
+    return res.status(400).json({ success: false, message: 'Email y contraseña son obligatorios' });
   }
 
   try {
@@ -221,7 +218,7 @@ app.post('/api/auth/register', async (req, res) => {
 // -------------------------------------------------------------------
 
 // Helper: nombre real de la columna de estado
-async function getEstadoColName(pool) {
+async function getEstadoColName(poolConn) {
   const q = `
     SELECT column_name
     FROM information_schema.columns
@@ -230,7 +227,7 @@ async function getEstadoColName(pool) {
     ORDER BY CASE column_name WHEN 'estado_actual' THEN 0 ELSE 1 END
     LIMIT 1;
   `;
-  const r = await pool.query(q);
+  const r = await poolConn.query(q);
   return r.rows.length ? r.rows[0].column_name : 'estado_actual';
 }
 
@@ -364,8 +361,30 @@ app.get('/api/solicitudes/asignadas', verifyJWT, requireRole('tecnico'), async (
   }
 });
 
-// Asignar / reasignar técnico (admin) con transición opcional a 'asignada'
-app.patch('/api/solicitudes/:id/enviar-a-tecnico', verifyJWT, requireRole('administrador'), async (req, res) => {
+// Alias de compatibilidad: /api/solicitudes/mias
+app.get('/api/solicitudes/mias', verifyJWT, requireRole('tecnico'), async (req, res) => {
+  try {
+    const tecnicoId = req.user.id;
+    const ESTADO_COL = await getEstadoColName(pool);
+    const { rows } = await pool.query(
+      `SELECT s.*,
+              CASE WHEN s.${ESTADO_COL}='en_progreso' THEN 'en_proceso' ELSE s.${ESTADO_COL} END AS estado_actual,
+              c.nombre AS cliente_nombre, c.email AS cliente_email
+       FROM solicitudes s
+       LEFT JOIN clientes c ON c.id = s.cliente_id
+       WHERE s.tecnico_id = $1
+       ORDER BY s.fecha_solicitud DESC`,
+      [tecnicoId]
+    );
+    res.json({ success: true, solicitudes: rows });
+  } catch (e) {
+    console.error('GET /api/solicitudes/mias', e);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// ---- Asignar / reasignar técnico (admin) ----
+async function enviarATecnicoHandler(req, res) {
   try {
     const id = parseInt(req.params.id, 10);
     const tecnicoId = parseInt(req.body?.tecnico_id, 10);
@@ -399,12 +418,15 @@ app.patch('/api/solicitudes/:id/enviar-a-tecnico', verifyJWT, requireRole('admin
     );
     res.json({ success: true, message: 'Solicitud enviada al técnico', solicitud: rows[0] });
   } catch (e) {
-    console.error('PATCH /api/solicitudes/:id/enviar-a-tecnico', e);
+    console.error('ENVIAR A TÉCNICO', e);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
-});
+}
+app.patch('/api/solicitudes/:id/enviar-a-tecnico', verifyJWT, requireRole('administrador'), enviarATecnicoHandler);
+// Soportar PUT además de PATCH (por compatibilidad)
+app.put('/api/solicitudes/:id/enviar-a-tecnico', verifyJWT, requireRole('administrador'), enviarATecnicoHandler);
 
-// PUT estado/técnico con historial + reglas (ciclo de vida)
+// ---- PUT estado/técnico con historial + reglas (ciclo de vida) ----
 app.put('/api/solicitudes/:id', verifyJWT, requireRole('administrador', 'tecnico'), async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
@@ -413,7 +435,7 @@ app.put('/api/solicitudes/:id', verifyJWT, requireRole('administrador', 'tecnico
     }
 
     const usuarioId = req.user?.id || null;
-    const rolUsuario = req.user?.rol; // 'administrador' | 'tecnico'
+    const rolUsuario = req.user?.rol;
 
     const ESTADO_COL = await getEstadoColName(pool);
     const ESTADOS_BD = ['pendiente', 'en_revision', 'asignada', 'en_progreso', 'completada', 'cancelada'];
@@ -728,28 +750,51 @@ app.patch('/api/usuarios/:id/password', verifyJWT, requireRole('administrador'),
 });
 
 // -------------------------------------------------------------------
-// Diagnóstico (opcional)
+// 404 (colocar ANTES del manejador de errores)
 // -------------------------------------------------------------------
-app.get('/api/_routes', (_req, res) => {
-  const routes = [];
-  app._router.stack.forEach((m) => {
-    if (m.route && m.route.path) {
-      const methods = Object.keys(m.route.methods).join(',').toUpperCase();
-      routes.push(`${methods} ${m.route.path}`);
-    }
-  });
-  res.json({ routes });
-});
-
-// -------------------------------------------------------------------
-app.use((_req, res) => {
+app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Ruta no encontrada' });
 });
-app.use((err, _req, res, _next) => {
-  console.error('Error en el servidor:', err);
-  res.status(500).json({ success: false, message: 'Error interno del servidor' });
+
+// -------------------------------------------------------------------
+// Manejador de errores robusto (4 parámetros)
+// -------------------------------------------------------------------
+app.use((err, req, res, next) => {
+  try {
+    const status = Number.isInteger(err?.status) ? err.status : 500;
+    const msg = err?.message || 'Error no controlado';
+    const stack = err?.stack || '';
+
+    console.error('[ERROR]', msg);
+    if (stack) console.error(stack);
+
+    if (res.headersSent) return next(err);
+
+    const payload = { success: false, message: msg };
+    if (process.env.NODE_ENV !== 'production' && stack) {
+      payload.trace = stack.split('\n').slice(0, 3);
+    }
+
+    res.status(status).json(payload);
+  } catch (e) {
+    console.error('[Fallo manejador de errores]', e?.message || e);
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: 'Error interno del servidor' });
+    } else {
+      next(e);
+    }
+  }
 });
 
+// Handlers globales por seguridad
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason?.message || reason, reason?.stack || '');
+});
+process.on('uncaughtException', (error) => {
+  console.error('[uncaughtException]', error?.message || error, error?.stack || '');
+});
+
+// -------------------------------------------------------------------
 app.listen(PORT, () => {
   console.log(`Servidor INFOSER ejecutándose en: http://localhost:${PORT}`);
 });
