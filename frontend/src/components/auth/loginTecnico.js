@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/auth.css'; // ✅ RUTA CORREGIDA
+import { apiFetch, api } from '../utils/api.js';
 
 const LoginTecnico = () => {
   const [credenciales, setCredenciales] = useState({

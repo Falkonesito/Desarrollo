@@ -219,4 +219,48 @@
   .login-client-icon {
     font-size: 2.5rem;
   }
+
+}
+/* Estilos para el indicador de backend */
+.backend-status {
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.9em;
+}
+
+.backend-status.online {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.backend-status.offline {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.backend-info {
+  padding: 6px;
+  border-radius: 4px;
+  margin-top: 5px;
+  font-size: 0.85em;
+}
+
+.backend-info.online {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.backend-info.offline {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* Mejora visual para el estado de carga */
+.btn-login-client:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }

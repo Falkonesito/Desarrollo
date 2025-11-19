@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // ✅ AGREGAR
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../../styles/register.css';
 
 const RegisterClientes = () => {
@@ -9,8 +9,26 @@ const RegisterClientes = () => {
     password: '',
     telefono: ''
   });
+  const [cargando, setCargando] = useState(false);
+  const [backendDisponible, setBackendDisponible] = useState(false);
+  const navigate = useNavigate();
 
-  const navigate = useNavigate(); // ✅ AGREGAR
+  // Verificar si el backend esta disponible al cargar la pagina
+  useEffect(() => {
+    verificarBackend();
+  }, []);
+
+  const verificarBackend = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/health');
+      const data = await response.json();
+      if (data.success) {
+        setBackendDisponible(true);
+      }
+    } catch (error) {
+      setBackendDisponible(false);
+    }
+  };
 
   const handleChange = (e) => {
     setDatosRegistro({
@@ -19,21 +37,52 @@ const RegisterClientes = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Datos de registro:', datosRegistro);
+    setCargando(true);
     
-    // ✅ LÓGICA MEJORADA DE REGISTRO
-    // Obtener clientes existentes o crear array vacío
+    if (backendDisponible) {
+      await registrarConBackend();
+    } else {
+      registrarEnLocalStorage();
+    }
+    
+    setCargando(false);
+  };
+
+  const registrarConBackend = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(datosRegistro)
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`Registro exitoso ${datosRegistro.nombre}! Ahora puedes iniciar sesion.`);
+        setDatosRegistro({ nombre: '', email: '', password: '', telefono: '' });
+        setTimeout(() => navigate('/login'), 1000);
+      } else {
+        alert(`Error en registro: ${data.message}`);
+      }
+    } catch (error) {
+      alert('Error al conectar con el servidor. Usando modo local...');
+      registrarEnLocalStorage();
+    }
+  };
+
+  const registrarEnLocalStorage = () => {
     const clientesExistentes = JSON.parse(localStorage.getItem('clientesRegistrados')) || [];
     
-    // Verificar si el email ya existe
     if (clientesExistentes.some(cliente => cliente.email === datosRegistro.email)) {
-      alert('⚠️ Este email ya está registrado. Use otro email o inicie sesión.');
+      alert('Este email ya esta registrado. Use otro email o inicie sesion.');
       return;
     }
     
-    // Crear nuevo cliente
     const nuevoCliente = {
       id: Date.now(),
       nombre: datosRegistro.nombre,
@@ -44,25 +93,12 @@ const RegisterClientes = () => {
       rol: 'cliente'
     };
 
-    // Guardar en la lista de clientes
     clientesExistentes.push(nuevoCliente);
     localStorage.setItem('clientesRegistrados', JSON.stringify(clientesExistentes));
     
-    // ✅ REDIRIGIR A LOGIN EN LUGAR DE HOME
-    alert(`✅ ¡Registro exitoso ${datosRegistro.nombre}! Ahora puedes iniciar sesión.`);
-    
-    // Limpiar formulario
-    setDatosRegistro({
-      nombre: '',
-      email: '',
-      password: '',
-      telefono: ''
-    });
-    
-    // Redirigir a login después de 1 segundo
-    setTimeout(() => {
-      navigate('/login');
-    }, 1000);
+    alert(`Registro exitoso ${datosRegistro.nombre}! Ahora puedes iniciar sesion.`);
+    setDatosRegistro({ nombre: '', email: '', password: '', telefono: '' });
+    setTimeout(() => navigate('/login'), 1000);
   };
 
   return (
@@ -88,8 +124,9 @@ const RegisterClientes = () => {
                 name="nombre"
                 value={datosRegistro.nombre}
                 onChange={handleChange}
-                placeholder="Juan Pérez"
+                placeholder="Juan Perez"
                 required 
+                disabled={cargando}
               />
             </div>
 
@@ -105,6 +142,7 @@ const RegisterClientes = () => {
                 onChange={handleChange}
                 placeholder="cliente@ejemplo.com"
                 required 
+                disabled={cargando}
               />
             </div>
 
@@ -118,15 +156,16 @@ const RegisterClientes = () => {
                 name="password"
                 value={datosRegistro.password}
                 onChange={handleChange}
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Minimo 6 caracteres"
                 minLength="6"
                 required 
+                disabled={cargando}
               />
             </div>
 
             <div className="form-group-client">
               <label className="form-label-client">
-                <i className="fas fa-phone me-2"></i>Teléfono
+                <i className="fas fa-phone me-2"></i>Telefono
               </label>
               <input 
                 type="tel" 
@@ -136,16 +175,30 @@ const RegisterClientes = () => {
                 onChange={handleChange}
                 placeholder="+56 9 1234 5678"
                 required 
+                disabled={cargando}
               />
             </div>
 
-            <button type="submit" className="btn-register-client">
-              <i className="fas fa-user-plus me-2"></i>
-              CREAR CUENTA
+            <button 
+              type="submit" 
+              className="btn-register-client"
+              disabled={cargando}
+            >
+              {cargando ? (
+                <>
+                  <i className="fas fa-spinner fa-spin me-2"></i>
+                  REGISTRANDO...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-user-plus me-2"></i>
+                  CREAR CUENTA
+                </>
+              )}
             </button>
 
             <div className="login-link-client">
-              ¿Ya tiene una cuenta? <a href="/login">Inicie sesión aquí</a>
+              Ya tiene una cuenta? <a href="/login">Inicie sesion aqui</a>
             </div>
           </form>
         </div>
