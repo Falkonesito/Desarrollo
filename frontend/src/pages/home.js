@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../styles/home.css';
-import { api } from '../components/utils/api.js';
+import { api } from '../utils/api.js';
 
 const Home = () => {
   const [cliente, setCliente] = useState(null);
-  const [solicitudes, setSolicitudes] = useState([]);
+  const [, setSolicitudes] = useState([]);          // solo usamos el setter (evita warning)
   const [nuevaSolicitud, setNuevaSolicitud] = useState({
     titulo: '',
     descripcion: '',
@@ -20,7 +20,7 @@ const Home = () => {
   });
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [cargando, setCargando] = useState(false);
-  const [error, setError] = useState('');
+  const [, setError] = useState('');                // solo usamos el setter (evita warning)
   const navigate = useNavigate();
 
   const comunasRM = [
@@ -34,16 +34,16 @@ const Home = () => {
   ];
 
   const tiposServicio = [
-    { value: 'instalacion', label: 'Instalación' },
+    { value: 'instalacion',   label: 'Instalación' },
     { value: 'mantenimiento', label: 'Mantenimiento' },
-    { value: 'reparacion', label: 'Reparación' },
-    { value: 'asesoria', label: 'Asesoría' }
+    { value: 'reparacion',    label: 'Reparación' },
+    { value: 'asesoria',      label: 'Asesoría' }
   ];
 
   const prioridades = [
-    { value: 'baja', label: 'Baja' },
+    { value: 'baja',  label: 'Baja' },
     { value: 'media', label: 'Media' },
-    { value: 'alta', label: 'Alta' }
+    { value: 'alta',  label: 'Alta' }
   ];
 
   // Cargar cliente y sus solicitudes al montar
@@ -460,82 +460,81 @@ const Home = () => {
       </section>
 
       {/* SERVICIOS */}
-<section id="servicios" className="py-5 bg-light">
-  <div className="container">
-    <div className="text-center mb-5">
-      <h2 className="section-title">Nuestros Servicios</h2>
-      <p className="section-subtitle">Soluciones de seguridad adaptadas a tus necesidades</p>
-    </div>
+      <section id="servicios" className="py-5 bg-light">
+        <div className="container">
+          <div className="text-center mb-5">
+            <h2 className="section-title">Nuestros Servicios</h2>
+            <p className="section-subtitle">Soluciones de seguridad adaptadas a tus necesidades</p>
+          </div>
 
-    <div className="row">
-      {/* Instalación de Cámaras */}
-      <div className="col-md-6 mb-4">
-        <div className="card h-100 shadow-sm">
-          <div className="card-body">
-            <h4 className="mb-3">
-              <i className="fas fa-camera me-2"></i>
-              Instalación de Cámaras de Seguridad
-            </h4>
-            <p className="text-muted">
-              Diseño e implementación completa del sistema, desde el levantamiento en terreno hasta la
-              puesta en marcha y capacitación básica.
-            </p>
-            <ul className="mb-3">
-              <li>Planificación de cobertura y ángulos ciegos (croquis + recomendaciones).</li>
-              <li>Cámaras <strong>ColorVu</strong> 24/7 a color y <strong>PTZ</strong> con zoom óptico hasta 25×.</li>
-              <li>Canalizado, cableado estructurado y rotulación de puntos.</li>
-              <li>Grabadores <strong>DVR/NVR</strong>, discos de vigilancia y dimensionamiento de almacenamiento.</li>
-              <li>Configuración de red, acceso remoto seguro (P2P/VPN), app móvil y perfiles de usuario.</li>
-              <li>Entrega de documentación: claves iniciales, mapa de cámaras y ficha técnica.</li>
-            </ul>
-            <div className="small text-muted">
-              Opcionales: analítica de video (detección de personas/vehículos), audio disuasivo,
-              integración con alarmas y control de acceso.
+          <div className="row">
+            {/* Instalación de Cámaras */}
+            <div className="col-md-6 mb-4">
+              <div className="card h-100 shadow-sm">
+                <div className="card-body">
+                  <h4 className="mb-3">
+                    <i className="fas fa-camera me-2"></i>
+                    Instalación de Cámaras de Seguridad
+                  </h4>
+                  <p className="text-muted">
+                    Diseño e implementación completa del sistema, desde el levantamiento en terreno hasta la
+                    puesta en marcha y capacitación básica.
+                  </p>
+                  <ul className="mb-3">
+                    <li>Planificación de cobertura y ángulos ciegos (croquis + recomendaciones).</li>
+                    <li>Cámaras <strong>ColorVu</strong> 24/7 a color y <strong>PTZ</strong> con zoom óptico hasta 25×.</li>
+                    <li>Canalizado, cableado estructurado y rotulación de puntos.</li>
+                    <li>Grabadores <strong>DVR/NVR</strong>, discos de vigilancia y dimensionamiento de almacenamiento.</li>
+                    <li>Configuración de red, acceso remoto seguro (P2P/VPN), app móvil y perfiles de usuario.</li>
+                    <li>Entrega de documentación: claves iniciales, mapa de cámaras y ficha técnica.</li>
+                  </ul>
+                  <div className="small text-muted">
+                    Opcionales: analítica de video (detección de personas/vehículos), audio disuasivo,
+                    integración con alarmas y control de acceso.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mantenimiento (preventivo y correctivo) */}
+            <div className="col-md-6 mb-4">
+              <div className="card h-100 shadow-sm">
+                <div className="card-body">
+                  <h4 className="mb-3">
+                    <i className="fas fa-tools me-2"></i>
+                    Mantenimiento de Cámaras (Preventivo y Correctivo)
+                  </h4>
+                  <p className="text-muted">
+                    Mantén tu sistema operando al 100% con planes programados y soporte cuando algo falla.
+                  </p>
+
+                  <h6 className="mt-3">Preventivo (programado)</h6>
+                  <ul className="mb-3">
+                    <li>Limpieza de lentes y carcasas; revisión de sellos IP y soportes.</li>
+                    <li>Verificación de fuentes, POE, voltajes y conectores.</li>
+                    <li>Chequeo de ángulos, enfoque y perfil de imagen (día/noche).</li>
+                    <li>Actualización de firmware (cámaras/NVR) y respaldo de configuración.</li>
+                    <li>Pruebas de grabación, retención de video y salud de discos (S.M.A.R.T.).</li>
+                    <li>Informe técnico con hallazgos, evidencias y recomendaciones.</li>
+                  </ul>
+
+                  <h6>Correctivo (bajo demanda)</h6>
+                  <ul className="mb-3">
+                    <li>Diagnóstico en sitio y reemplazo de componentes defectuosos.</li>
+                    <li>Reconfiguración de red, puertos y usuarios; recuperación de acceso.</li>
+                    <li>Reubicación de cámaras y recalibración de detecciones.</li>
+                  </ul>
+
+                  <div className="small text-muted">
+                    Planes con <strong>SLA</strong> (tiempos de respuesta) y frecuencia: mensual, bimestral o trimestral.
+                    Atención 24/7 para clientes con plan activo.
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Mantenimiento (preventivo y correctivo) */}
-      <div className="col-md-6 mb-4">
-        <div className="card h-100 shadow-sm">
-          <div className="card-body">
-            <h4 className="mb-3">
-              <i className="fas fa-tools me-2"></i>
-              Mantenimiento de Cámaras (Preventivo y Correctivo)
-            </h4>
-            <p className="text-muted">
-              Mantén tu sistema operando al 100% con planes programados y soporte cuando algo falla.
-            </p>
-
-            <h6 className="mt-3">Preventivo (programado)</h6>
-            <ul className="mb-3">
-              <li>Limpieza de lentes y carcasas; revisión de sellos IP y soportes.</li>
-              <li>Verificación de fuentes, POE, voltajes y conectores.</li>
-              <li>Chequeo de ángulos, enfoque y perfil de imagen (día/noche).</li>
-              <li>Actualización de firmware (cámaras/NVR) y respaldo de configuración.</li>
-              <li>Pruebas de grabación, retención de video y salud de discos (S.M.A.R.T.).</li>
-              <li>Informe técnico con hallazgos, evidencias y recomendaciones.</li>
-            </ul>
-
-            <h6>Correctivo (bajo demanda)</h6>
-            <ul className="mb-3">
-              <li>Diagnóstico en sitio y reemplazo de componentes defectuosos.</li>
-              <li>Reconfiguración de red, puertos y usuarios; recuperación de acceso.</li>
-              <li>Reubicación de cámaras y recalibración de detecciones.</li>
-            </ul>
-
-            <div className="small text-muted">
-              Planes con <strong>SLA</strong> (tiempos de respuesta) y frecuencia: mensual, bimestral o trimestral.
-              Atención 24/7 para clientes con plan activo.
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
+      </section>
 
       {/* FOOTER */}
       <footer id="contacto" className="py-4 bg-dark text-white">

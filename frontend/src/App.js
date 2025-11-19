@@ -1,5 +1,7 @@
+// src/App.js
 import './App.css';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import Home from './pages/home';
 import LoginClientes from './components/auth/loginClientes';
 import RegisterClientes from './components/auth/registerClientes';
@@ -9,25 +11,97 @@ import AdminSolicitudes from './pages/adminSolicitudes';
 import AdminTecnicos from './pages/adminTecnicos';
 import AdminMetricas from './pages/adminMetricas';
 import TecnicoPanel from './pages/tecnicoPanel';
+import AdminCrearUsuario from './pages/adminCrearUsuario'; // 👈 NUEVO
 
-function App() {
+// ---- Guard genérico de rutas protegidas ----
+function RequireAuth({ roles, children }) {
+  const user = JSON.parse(localStorage.getItem('userData') || 'null');
+  const token = localStorage.getItem('authToken');
+
+  // debe existir usuario y token válido en Storage
+  if (!user || !token) return <Navigate to="/login" replace />;
+
+  // si se exigen roles y no coincide → redirecciona según rol
+  if (roles && !roles.includes(user.rol)) {
+    if (user.rol === 'tecnico') return <Navigate to="/tecnico/panel" replace />;
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
+export default function App() {
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<LoginClientes />} />
-          <Route path="/registro" element={<RegisterClientes />} />
-          <Route path="/admin/menu" element={<AdminMenu />} />
-          <Route path="/admin/clientes" element={<AdminClientes />} />
-          <Route path="/admin/solicitudes" element={<AdminSolicitudes />} />
-          <Route path="/admin/tecnicos" element={<AdminTecnicos />} />
-          <Route path="/admin/metricas" element={<AdminMetricas />} />
-          <Route path="/tecnico/panel" element={<TecnicoPanel />} />
-        </Routes>
-      </div>
+      <Routes>
+        {/* Públicas */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<LoginClientes />} />
+        <Route path="/registro" element={<RegisterClientes />} />
+
+        {/* ADMIN */}
+        <Route
+          path="/admin/menu"
+          element={
+            <RequireAuth roles={['administrador', 'admin']}>
+              <AdminMenu />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/clientes"
+          element={
+            <RequireAuth roles={['administrador', 'admin']}>
+              <AdminClientes />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/solicitudes"
+          element={
+            <RequireAuth roles={['administrador', 'admin']}>
+              <AdminSolicitudes />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/tecnicos"
+          element={
+            <RequireAuth roles={['administrador', 'admin']}>
+              <AdminTecnicos />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/metricas"
+          element={
+            <RequireAuth roles={['administrador', 'admin']}>
+              <AdminMetricas />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/usuarios/nuevo"
+          element={
+            <RequireAuth roles={['administrador', 'admin']}>
+              <AdminCrearUsuario />
+            </RequireAuth>
+          }
+        />
+
+        {/* TÉCNICO */}
+        <Route
+          path="/tecnico/panel"
+          element={
+            <RequireAuth roles={['tecnico']}>
+              <TecnicoPanel />
+            </RequireAuth>
+          }
+        />
+
+        {/* catch-all */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </Router>
   );
 }
-
-export default App;
