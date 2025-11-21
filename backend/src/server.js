@@ -23,20 +23,31 @@ const PORT = process.env.PORT || 5000;
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10);
 
 // -------------------------------------------------------------------
-// CORS CONFIG (LOCAL + RENDER FRONTEND)
+// CORS
 // -------------------------------------------------------------------
-const FRONTEND_ORIGIN =
-  process.env.FRONTEND_ORIGIN || 'https://infoser-frontend.onrender.com';
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://infoser-frontend.onrender.com',
+];
 
-const corsOptions = {
-  origin: [FRONTEND_ORIGIN, 'http://localhost:3000'],
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
+app.use(
+  cors({
+    origin(origin, cb) {
+      // Permitir herramientas tipo Postman (sin origin)
+      if (!origin) return cb(null, true);
 
-app.use(cors(corsOptions));
-// Preflight global
-app.options('*', cors(corsOptions));
+      if (allowedOrigins.includes(origin)) return cb(null, true);
+
+      // Si quieres más seguridad, deja este error.
+      // Si quieres permitir todo mientras pruebas, cambia a: return cb(null, true);
+      return cb(new Error(`Origin ${origin} no permitido por CORS`));
+    },
+    credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 
 app.use(express.json());
 
@@ -501,7 +512,7 @@ async function enviarATecnicoHandler(req, res) {
     );
     res.json({
       success: true,
-      message: 'Solicitud enviada al técnico',
+      message: 'Solicitud enviado al técnico',
       solicitud: rows[0],
     });
   } catch (e) {
