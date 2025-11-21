@@ -1,64 +1,120 @@
 // backend/src/services/ml.js
-const ML_BASE = process.env.ML_URL || 'http://localhost:8000';
+// "Modelo" interno simple para pronosticar demanda sin llamar a otro servidor.
+// Usa los datos de history y genera daily_forecast y pair_forecast.
 
-// Normaliza historia con llaves en español → inglés
-function normalizeHistory(history = []) {
-  return history.map((h) => {
-    // soporta {fecha, cantidad} o {date, count}
-    const date =
-      h.date ??
-      h.fecha ??
-      h.dia ??
-      h.fecha_solicitud ??
-      h.fecha_servicio;
-
-    const count =
-      h.count ??
-      h.cantidad ??
-      h.total ??
-      h.numero ??
-      h.n;
-
-    return {
-      date: typeof date === 'string' ? date : new Date(date).toISOString().slice(0, 10),
-      comuna: (h.comuna ?? '').toString().trim().toLowerCase(),
-      tipo_servicio: (h.tipo_servicio ?? h.tipo ?? '').toString().trim().toLowerCase(),
-      count: Number(count ?? 0),
-    };
-  });
+function parseDate(str) {
+  const d = new Date(str);
+  if (Number.isNaN(d.getTime())) return null;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-async function forecastML(payload) {
-  const body = {
-    horizon_days: Number(payload?.horizon_days ?? 14),
-    history: normalizeHistory(payload?.history ?? []),
+function addDays(d, n) {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+
+function formatDate(d) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+// body: { history: [{ date, comuna, tipo_servicio, count }], horizon_days }
+async function forecastML(body) {
+  const history = Array.isArray(body?.history) ? body.history : [];
+  const horizon = Math.min(Math.max(Number(body?.horizon_days) || 7, 1), 30);
+
+  if (!history.length) {
+    // sin histórico, devolvemos algo plano
+    const today = new Date();
+    const daily_forecast = [];
+    for (let i = 1; i <= horizon; i++) {
+      const d = addDays(today, i);
+      daily_forecast.push({
+        date: formatDate(d),
+        total: 0,
+      });
+    }
+    return {
+      daily_forecast,
+      pair_forecast: [],
+    };
+  }
+
+  // ----------------------------
+  // 1) Agregamos por fecha total de solicitudes
+  // ----------------------------
+  const byDate = new Map(); // dateStr -> total count
+  const byPair = new Map(); // "comuna|tipo_servicio" -> total count
+
+  for (const item of history) {
+    const d = parseDate(item.date);
+    if (!d) continue;
+    const dateStr = formatDate(d);
+    const c = Number(item.count) || 0;
+    const comuna = (item.comuna || '').toLowerCase();
+    const tipo = (item.tipo_servicio || '').toLowerCase();
+
+    byDate.set(dateStr, (byDate.get(dateStr) || 0) + c);
+
+    const key = `${comuna}|${tipo}`;
+    byPair.set(key, (byPair.get(key) || 0) + c);
+  }
+
+  // promedio diario global
+  const totalSum = Array.from(byDate.values()).reduce((a, b) => a + b, 0);
+  const avgDaily = totalSum / Math.max(byDate.size, 1);
+
+  // ----------------------------
+  // 2) Forecast diario simple:
+  //    tendencia lineal suave +5% en el último día del horizonte
+  // ----------------------------
+  const today = new Date();
+  const daily_forecast = [];
+  for (let i = 1; i <= horizon; i++) {
+    const d = addDays(today, i);
+    const factor = 1 + 0.05 * (i / horizon); // sube hasta +5% al final
+    const total = avgDaily * factor;
+
+    daily_forecast.push({
+      date: formatDate(d),
+      total: Number(total.toFixed(2)),
+    });
+  }
+
+  // ----------------------------
+  // 3) Forecast por par (comuna, tipo_servicio)
+  //    Repartimos la demanda diaria según proporciones históricas
+  // ----------------------------
+  const pairTotal = Array.from(byPair.values()).reduce((a, b) => a + b, 0);
+  const pair_forecast = [];
+
+  if (pairTotal > 0) {
+    const pairList = Array.from(byPair.entries()).map(([key, sum]) => {
+      const [comuna, tipo_servicio] = key.split('|');
+      const weight = sum / pairTotal;
+      return { comuna, tipo_servicio, weight };
+    });
+
+    for (const day of daily_forecast) {
+      for (const p of pairList) {
+        const count = day.total * p.weight;
+        pair_forecast.push({
+          date: day.date,
+          comuna: p.comuna,
+          tipo_servicio: p.tipo_servicio,
+          count: Number(count.toFixed(2)),
+        });
+      }
+    }
+  }
+
+  return {
+    daily_forecast,
+    pair_forecast,
   };
-
-  // Validación mínima
-  if (!Array.isArray(body.history) || body.history.length === 0) {
-    const err = new Error('history vacío o inválido');
-    err.status = 400;
-    throw err;
-  }
-
-  const url = `${ML_BASE}/forecast`;
-
-  // Node >=18 tiene fetch nativo
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    const err = new Error(`ML ${res.status} - ${text || res.statusText}`);
-    err.status = 502; // Bad Gateway hacia el microservicio
-    throw err;
-  }
-
-  const data = await res.json();
-  return data;
 }
 
 module.exports = { forecastML };
