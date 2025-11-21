@@ -22,16 +22,21 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10);
 
-// 🔧 CORS bien configurado
-app.use(
-  cors({
-    origin: '*', // luego podemos restringir a ['http://localhost:3000', 'https://TU-FRONT']
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
-// Responder preflight
-app.options('*', cors());
+// -------------------------------------------------------------------
+// CORS CONFIG (LOCAL + RENDER FRONTEND)
+// -------------------------------------------------------------------
+const FRONTEND_ORIGIN =
+  process.env.FRONTEND_ORIGIN || 'https://infoser-frontend.onrender.com';
+
+const corsOptions = {
+  origin: [FRONTEND_ORIGIN, 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+// Preflight global
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
@@ -496,7 +501,7 @@ async function enviarATecnicoHandler(req, res) {
     );
     res.json({
       success: true,
-      message: 'Solicitud enviado al técnico',
+      message: 'Solicitud enviada al técnico',
       solicitud: rows[0],
     });
   } catch (e) {
