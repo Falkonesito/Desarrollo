@@ -282,55 +282,60 @@ async function addHistorial({ solicitud_id, estado, comentario, usuario_id }) {
 }
 
 // Crear solicitud
-app.post('/api/solicitudes', verifyJWT, validarCrearSolicitud, async (req, res) => {
-  const {
-    titulo,
-    descripcion,
-    direccion_servicio,
-    comuna,
-    region,
-    tipo_servicio,
-    prioridad,
-    equipos_solicitados,
-    comentarios_finales,
-    cliente_id: clienteIdBody,
-  } = req.body;
+app.post(
+  '/api/solicitudes',
+  verifyJWT,
+  validarCrearSolicitud,
+  async (req, res) => {
+    const {
+      titulo,
+      descripcion,
+      direccion_servicio,
+      comuna,
+      region,
+      tipo_servicio,
+      prioridad,
+      equipos_solicitados,
+      comentarios_finales,
+      cliente_id: clienteIdBody,
+    } = req.body;
 
-  const cliente_id =
-    req.user.rol === 'cliente' ? req.user.id : clienteIdBody || null;
+    const cliente_id =
+      req.user.rol === 'cliente' ? req.user.id : clienteIdBody || null;
 
-  try {
-    const result = await pool.query(
-      `INSERT INTO solicitudes
-       (cliente_id, direccion_servicio, comuna, region, titulo, descripcion,
-        tipo_servicio, prioridad, equipos_solicitados, comentarios_finales)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       RETURNING *`,
-      [
-        cliente_id,
-        direccion_servicio,
-        comuna,
-        region,
-        titulo,
-        descripcion,
-        tipo_servicio,
-        prioridad,
-        equipos_solicitados || null,
-        comentarios_finales || null,
-      ]
-    );
-    res.json({
-      success: true,
-      message: 'Solicitud creada exitosamente',
-      solicitud: result.rows[0],
-    });
-  } catch (error) {
-    console.error('Error creando solicitud:', error);
-    res
-      .status(500)
-      .json({ success: false, message: 'Error interno del servidor' });
+    try {
+      const result = await pool.query(
+        `INSERT INTO solicitudes
+         (cliente_id, direccion_servicio, comuna, region, titulo, descripcion,
+          tipo_servicio, prioridad, equipos_solicitados, comentarios_finales)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         RETURNING *`,
+        [
+          cliente_id,
+          direccion_servicio,
+          comuna,
+          region,
+          titulo,
+          descripcion,
+          tipo_servicio,
+          prioridad,
+          equipos_solicitados || null,
+          comentarios_finales || null,
+        ]
+      );
+      res.json({
+        success: true,
+        message: 'Solicitud creada exitosamente',
+        solicitud: result.rows[0],
+      });
+    } catch (error) {
+      console.error('Error creando solicitud:', error);
+      res
+        .status(500)
+        .json({ success: false, message: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 // Solicitudes por cliente
 app.get('/api/solicitudes/cliente/:clienteId', verifyJWT, async (req, res) => {
@@ -481,7 +486,7 @@ async function enviarATecnicoHandler(req, res) {
     );
     res.json({
       success: true,
-      message: 'Solicitud enviada al técnico',
+      message: 'Solicitud enviado al técnico',
       solicitud: rows[0],
     });
   } catch (e) {
@@ -768,6 +773,40 @@ app.get(
       res
         .status(500)
         .json({ success: false, message: 'Error interno del servidor' });
+    }
+  }
+);
+
+// -------------------------------------------------------------------
+// CLIENTES (ADMIN)
+// -------------------------------------------------------------------
+app.get(
+  '/api/clientes',
+  verifyJWT,
+  requireRole('administrador'),
+  async (_req, res) => {
+    try {
+      const { rows } = await pool.query(
+        `SELECT 
+           id,
+           nombre,
+           email,
+           telefono,
+           fecha_registro
+         FROM clientes
+         ORDER BY fecha_registro DESC`
+      );
+
+      res.json({
+        success: true,
+        clientes: rows,
+      });
+    } catch (error) {
+      console.error('Error obteniendo clientes:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error obteniendo clientes',
+      });
     }
   }
 );
