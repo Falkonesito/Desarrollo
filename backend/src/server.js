@@ -22,7 +22,17 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10);
 
-app.use(cors());
+// 🔧 CORS bien configurado
+app.use(
+  cors({
+    origin: '*', // luego podemos restringir a ['http://localhost:3000', 'https://TU-FRONT']
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
+// Responder preflight
+app.options('*', cors());
+
 app.use(express.json());
 
 // -------------------------------------------------------------------
