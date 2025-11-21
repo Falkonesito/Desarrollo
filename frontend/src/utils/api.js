@@ -1,12 +1,12 @@
 // frontend/src/utils/api.js
-// Helper fetch centralizado: fuerza BASE_URL=5000 y normaliza /api
+// Helper fetch centralizado: fuerza BASE_URL y normaliza /api
 
 const API_URL =
   (typeof process !== 'undefined' && process.env.REACT_APP_API_URL) ||
   (typeof import.meta !== 'undefined' &&
     import.meta.env &&
     import.meta.env.VITE_API_URL) ||
-  'http://localhost:5000';
+  'https://infoser-backend.onrender.com';
 
 /** Normaliza la ruta y asegura prefijo /api cuando corresponda */
 function normalizeUrl(path) {

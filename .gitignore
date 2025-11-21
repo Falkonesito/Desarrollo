@@ -13,3 +13,6 @@ venv/
 ml-service/venv/
 **/__pycache__/
 *.pyc
+
+
+infoser_ep_spa.dump
