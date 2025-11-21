@@ -25,17 +25,30 @@ const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10);
 // -------------------------------------------------------------------
 // CORS + JSON
 // -------------------------------------------------------------------
-app.use(
-  cors({
-    origin: [
-      'http://localhost:3000',
-      'https://infoser-frontend.onrender.com',
-    ],
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
-// ❗ OJO: NO hay ninguna ruta tipo app.options('*', ...) ni app.all('*', ...)
+const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'https://infoser-frontend.onrender.com',
+];
+
+const corsOptions = {
+  origin(origin, callback) {
+    // 💡 Permitir herramientas sin origin (Postman, curl, health checks, etc.)
+    if (!origin) return callback(null, true);
+
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Origen no permitido: no ponemos header y el navegador lo bloqueará
+    return callback(null, false);
+  },
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+// ❗ OJO: NO hay ninguna ruta tipo app.options('*', ...) ni app.all('*', ...).
 app.use(express.json());
 
 // -------------------------------------------------------------------
