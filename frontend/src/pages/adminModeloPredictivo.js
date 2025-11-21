@@ -106,9 +106,25 @@ export default function AdminModeloPredictivo() {
     try {
       setLoading(true);
       const data = await postForecast(payload);
-      setDaily(Array.isArray(data?.daily_forecast) ? data.daily_forecast : []);
-      setPairs(Array.isArray(data?.pair_forecast) ? data.pair_forecast : []);
+
+      console.log('Respuesta ML:', data);
+
+      const dailyData = Array.isArray(data?.daily_forecast)
+        ? data.daily_forecast
+        : [];
+
+      const pairData = Array.isArray(data?.pair_forecast)
+        ? data.pair_forecast.map((p) => ({
+            comuna: p?.comuna ?? '',
+            tipo_servicio: p?.tipo_servicio ?? '',
+            next_days: Array.isArray(p?.next_days) ? p.next_days : [],
+          }))
+        : [];
+
+      setDaily(dailyData);
+      setPairs(pairData);
     } catch (e) {
+      console.error('Error en postForecast:', e);
       setError(e?.message || 'No se pudo obtener el pronóstico.');
     } finally {
       setLoading(false);
@@ -314,39 +330,42 @@ export default function AdminModeloPredictivo() {
                   Pronóstico por par (comuna / tipo_servicio)
                 </h4>
                 <div style={{ display: 'grid', gap: 16 }}>
-                  {pairs.map((p, i) => (
-                    <div
-                      key={`${p.comuna}-${p.tipo_servicio}-${i}`}
-                      style={{
-                        border: `1px solid ${theme.border}`,
-                        borderRadius: 12,
-                        padding: 12,
-                        background: '#fbfdff',
-                      }}
-                    >
-                      <div style={{ marginBottom: 8 }}>
-                        <strong>{p.comuna}</strong> — <em>{p.tipo_servicio}</em>
+                  {pairs.map((p, i) => {
+                    const nextDays = Array.isArray(p.next_days) ? p.next_days : [];
+                    return (
+                      <div
+                        key={`${p.comuna || 'nocom'}-${p.tipo_servicio || 'noserv'}-${i}`}
+                        style={{
+                          border: `1px solid ${theme.border}`,
+                          borderRadius: 12,
+                          padding: 12,
+                          background: '#fbfdff',
+                        }}
+                      >
+                        <div style={{ marginBottom: 8 }}>
+                          <strong>{p.comuna || '(sin comuna)'}</strong> — <em>{p.tipo_servicio || '(sin tipo)'}</em>
+                        </div>
+                        <div style={{ overflowX: 'auto' }}>
+                          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
+                            <thead>
+                              <tr style={{ background: '#f8fafc' }}>
+                                {nextDays.map((_, idx2) => (
+                                  <th key={idx2} className="pxy">D+{idx2 + 1}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                {nextDays.map((v, idx2) => (
+                                  <td key={idx2} className="pxy">{Number(v).toFixed(2)}</td>
+                                ))}
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                      <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-                          <thead>
-                            <tr style={{ background: '#f8fafc' }}>
-                              {p.next_days.map((_, idx2) => (
-                                <th key={idx2} className="pxy">D+{idx2 + 1}</th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              {p.next_days.map((v, idx2) => (
-                                <td key={idx2} className="pxy">{Number(v).toFixed(2)}</td>
-                              ))}
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             )}
