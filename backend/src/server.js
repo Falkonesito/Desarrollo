@@ -23,32 +23,19 @@ const PORT = process.env.PORT || 5000;
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10);
 
 // -------------------------------------------------------------------
-// CORS
+// CORS + JSON
 // -------------------------------------------------------------------
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'https://infoser-frontend.onrender.com',
-];
-
 app.use(
   cors({
-    origin(origin, cb) {
-      // Permitir herramientas tipo Postman (sin origin)
-      if (!origin) return cb(null, true);
-
-      if (allowedOrigins.includes(origin)) return cb(null, true);
-
-      // Si quieres más seguridad, deja este error.
-      // Si quieres permitir todo mientras pruebas, cambia a: return cb(null, true);
-      return cb(new Error(`Origin ${origin} no permitido por CORS`));
-    },
-    credentials: true,
+    origin: [
+      'http://localhost:3000',
+      'https://infoser-frontend.onrender.com',
+    ],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
-
+// ❗ OJO: NO hay ninguna ruta tipo app.options('*', ...) ni app.all('*', ...)
 app.use(express.json());
 
 // -------------------------------------------------------------------
@@ -512,7 +499,7 @@ async function enviarATecnicoHandler(req, res) {
     );
     res.json({
       success: true,
-      message: 'Solicitud enviado al técnico',
+      message: 'Solicitud enviada al técnico',
       solicitud: rows[0],
     });
   } catch (e) {
