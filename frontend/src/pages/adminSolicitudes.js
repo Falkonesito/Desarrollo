@@ -1,9 +1,34 @@
 // frontend/src/pages/adminSolicitudes.js
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import '../styles/adminSolicitudes.css';
 import { api } from '../utils/api.js';
 
-const ESTADOS = ['pendiente', 'en_proceso', 'completada', 'cancelada'];
+// Estados base; el resto se sumará dinámicamente desde la BD
+const ESTADOS_BASE = [
+  'pendiente',
+  'en_revision',
+  'asignada',
+  'en_proceso',
+  'completada',
+  'cancelada',
+];
+
+// Normalizador de estados: siempre minúscula y con _
+const normalizarEstado = (s) =>
+  (s || '')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_');
+
+// Cómo mostrar el estado en texto bonito
+const labelEstado = (s) => {
+  const norm = normalizarEstado(s);
+  if (!norm) return '-';
+  const texto = norm.replace(/_/g, ' ');
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+};
 
 export default function AdminSolicitudes() {
   const navigate = useNavigate();
@@ -26,7 +51,6 @@ export default function AdminSolicitudes() {
     setUser(u);
   }, [navigate]);
 
-  // Cargar datos iniciales
   const cargarTodo = async () => {
     try {
       setCargando(true);
@@ -44,16 +68,38 @@ export default function AdminSolicitudes() {
     }
   };
 
-  useEffect(() => { cargarTodo(); }, []);
+  useEffect(() => {
+    cargarTodo();
+  }, []);
+
+  // Estados disponibles: base + lo que exista en la BD, todos normalizados y sin duplicados
+  const estadosDisponibles = useMemo(() => {
+    const base = ESTADOS_BASE.map(normalizarEstado);
+    const fromData = solicitudes
+      .map((s) => normalizarEstado(s.estado_actual))
+      .filter(Boolean);
+    return Array.from(new Set([...base, ...fromData]));
+  }, [solicitudes]);
 
   const solicitudesFiltradas = useMemo(() => {
     const q = filtro.trim().toLowerCase();
     if (!q) return solicitudes;
     return solicitudes.filter((s) =>
       [
-        s.titulo, s.descripcion, s.comuna, s.region, s.tipo_servicio, s.estado_actual,
-        s?.cliente_nombre, s?.cliente_email, s?.tecnico_nombre,
-      ].filter(Boolean).join(' ').toLowerCase().includes(q)
+        s.titulo,
+        s.descripcion,
+        s.comuna,
+        s.region,
+        s.tipo_servicio,
+        s.estado_actual,
+        s?.cliente_nombre,
+        s?.cliente_email,
+        s?.tecnico_nombre,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(q)
     );
   }, [filtro, solicitudes]);
 
@@ -63,16 +109,20 @@ export default function AdminSolicitudes() {
         alert('ID de solicitud inválido');
         return;
       }
+
       const body = {
         ...payload,
-        tecnico_id: payload.tecnico_id === '' || payload.tecnico_id === undefined
-          ? null
-          : Number(payload.tecnico_id),
+        tecnico_id:
+          payload.tecnico_id === '' || payload.tecnico_id === undefined
+            ? null
+            : Number(payload.tecnico_id),
       };
 
       setGuardando(id);
       const res = await api.put(`/api/solicitudes/${id}`, body);
-      setSolicitudes((prev) => prev.map((s) => (s.id === id ? { ...s, ...res.solicitud } : s)));
+      setSolicitudes((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, ...res.solicitud } : s))
+      );
     } catch (err) {
       console.error('Error PUT /api/solicitudes/:id', err);
       alert(err.message || 'Error al actualizar la solicitud');
@@ -81,8 +131,12 @@ export default function AdminSolicitudes() {
     }
   };
 
-  const handleCambioEstado = (sol, nuevoEstado) => {
-    if (nuevoEstado === sol.estado_actual) return;
+  const handleCambioEstado = (sol, nuevoEstadoRaw) => {
+    const nuevoEstado = normalizarEstado(nuevoEstadoRaw);
+    const estadoActualNorm = normalizarEstado(sol.estado_actual);
+
+    if (nuevoEstado === estadoActualNorm) return;
+
     actualizarSolicitud(sol.id, {
       estado_actual: nuevoEstado,
       tecnico_id: sol.tecnico_id ?? null,
@@ -93,10 +147,15 @@ export default function AdminSolicitudes() {
   const enviarATecnico = async (solicitudId, tecnicoId) => {
     try {
       setGuardando(solicitudId);
-      const res = await api.patch(`/api/solicitudes/${solicitudId}/enviar-a-tecnico`, {
-        tecnico_id: Number(tecnicoId)
-      });
-      setSolicitudes(prev => prev.map(s => s.id === solicitudId ? { ...s, ...res.solicitud } : s));
+      const res = await api.patch(
+        `/api/solicitudes/${solicitudId}/enviar-a-tecnico`,
+        { tecnico_id: Number(tecnicoId) }
+      );
+      setSolicitudes((prev) =>
+        prev.map((s) =>
+          s.id === solicitudId ? { ...s, ...res.solicitud } : s
+        )
+      );
     } catch (e) {
       console.error('Error PATCH enviar-a-tecnico', e);
       alert(e.message || 'Error al enviar al técnico');
@@ -106,120 +165,321 @@ export default function AdminSolicitudes() {
   };
 
   const handleAsignarTecnico = (sol, tecnicoId) => {
-    // al cambiar el select, también disparo el envío
-    if (!tecnicoId) return actualizarSolicitud(sol.id, { tecnico_id: null });
+    if (!tecnicoId) {
+      return actualizarSolicitud(sol.id, { tecnico_id: null });
+    }
     enviarATecnico(sol.id, tecnicoId);
   };
 
   const fmtFecha = (iso) => {
-    try { return new Date(iso).toLocaleString('es-CL'); } catch { return iso || ''; }
+    try {
+      return new Date(iso).toLocaleString('es-CL');
+    } catch {
+      return iso || '';
+    }
   };
+
+  // Stats (usamos las filtradas)
+  const total = solicitudesFiltradas.length;
+  const pendientes = solicitudesFiltradas.filter(
+    (s) => normalizarEstado(s.estado_actual || 'pendiente') === 'pendiente'
+  ).length;
+  const enProceso = solicitudesFiltradas.filter(
+    (s) => normalizarEstado(s.estado_actual) === 'en_proceso'
+  ).length;
+  const completadas = solicitudesFiltradas.filter(
+    (s) => normalizarEstado(s.estado_actual) === 'completada'
+  ).length;
 
   if (!user) return null;
 
   return (
-    <div className="container py-4">
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div className="container">
-          <Link className="navbar-brand" to="/">
-            <i className="fas fa-shield-alt me-2"></i><strong>INFOSER</strong> & EP SPA
-          </Link>
-          <div className="navbar-nav ms-auto">
-            <span className="nav-link text-light">
-              <i className="fas fa-user-shield me-1"></i> Admin: {user?.nombre || user?.email}
-            </span>
-            <Link className="nav-link" to="/admin/menu">Menú</Link>
+    <div className="admin-solicitudes-container">
+      <header className="admin-solicitudes-header">
+        <div className="header-content">
+          <div className="header-left">
+            <button
+              className="btn-volver"
+              onClick={() => navigate('/admin/menu')}
+            >
+              <i className="fas fa-arrow-left me-2"></i>
+              Volver al Menú
+            </button>
+            <h1>
+              <i className="fas fa-list-check"></i>
+              Gestión de Solicitudes - INFOSER & EP SPA
+            </h1>
+          </div>
+          <div className="admin-info">
+            <span>Admin: {user?.nombre || user?.email}</span>
+            <button
+              className="logout-btn"
+              onClick={() => {
+                localStorage.clear();
+                window.location.href = '/';
+              }}
+            >
+              Cerrar Sesión
+            </button>
           </div>
         </div>
-      </nav>
+      </header>
 
-      <h3 className="mb-3"><i className="fas fa-list-check me-2"></i>Gestión de Solicitudes</h3>
+      <div className="admin-solicitudes-layout">
+        <nav className="admin-solicitudes-sidebar">
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/menu')}
+          >
+            <i className="fas fa-home"></i>
+            Menú Principal
+          </button>
+          <button className="sidebar-btn active">
+            <i className="fas fa-tools"></i>
+            📋 Solicitudes
+          </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/clientes')}
+          >
+            <i className="fas fa-users"></i>
+            👥 Clientes
+          </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/tecnicos')}
+          >
+            <i className="fas fa-user-cog"></i>
+            👨‍💻 Técnicos
+          </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/metricas')}
+          >
+            <i className="fas fa-chart-line"></i>
+            📈 Métricas
+          </button>
+        </nav>
 
-      <div className="d-flex align-items-center gap-2 mb-3">
-        <input className="form-control" placeholder="Buscar por título, cliente, comuna, estado..."
-               value={filtro} onChange={(e) => setFiltro(e.target.value)} style={{ maxWidth: 420 }} />
-        <button className="btn btn-outline-secondary" onClick={cargarTodo} disabled={cargando}>
-          <i className="fas fa-sync-alt"></i>
-        </button>
-        <span className="text-muted">{solicitudesFiltradas.length} de {solicitudes.length}</span>
-      </div>
+        <main className="admin-solicitudes-content">
+          {/* Header del contenido */}
+          <div className="content-header">
+            <h2>Gestión de Solicitudes</h2>
+            <div className="header-actions">
+              <input
+                className="search-input"
+                placeholder="Buscar por título, cliente, comuna, estado..."
+                value={filtro}
+                onChange={(e) => setFiltro(e.target.value)}
+              />
+              <button
+                className="btn-primary"
+                onClick={cargarTodo}
+                disabled={cargando}
+              >
+                <i className="fas fa-sync-alt me-2"></i>
+                {cargando ? 'Actualizando...' : 'Actualizar'}
+              </button>
+              <span className="text-muted small-resumen">
+                {total} de {solicitudes.length}
+              </span>
+            </div>
+          </div>
 
-      {error && <div className="alert alert-danger">{error}</div>}
-      {cargando ? (
-        <div className="text-muted">Cargando...</div>
-      ) : solicitudesFiltradas.length === 0 ? (
-        <div className="alert alert-info">No hay solicitudes.</div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-striped align-middle">
-            <thead>
-              <tr>
-                <th>#</th><th>Fecha</th><th>Título</th><th>Cliente</th>
-                <th>Ubicación</th><th>Tipo</th><th>Prioridad</th>
-                <th>Estado</th><th>Técnico</th><th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {solicitudesFiltradas.map((s) => (
-                <tr key={s.id}>
-                  <td>{s.id}</td>
-                  <td><div className="small">{fmtFecha(s.fecha_solicitud)}</div></td>
-                  <td>
-                    <div className="fw-semibold">{s.titulo}</div>
-                    <div className="text-muted small text-truncate" style={{ maxWidth: 320 }}>{s.descripcion}</div>
-                  </td>
-                  <td>
-                    <div>{s.cliente_nombre || '-'}</div>
-                    <div className="small text-muted">{s.cliente_email || ''}</div>
-                  </td>
-                  <td><div>{s.comuna}</div><div className="small text-muted">{s.region}</div></td>
-                  <td>{s.tipo_servicio}</td>
-                  <td>
-                    <span className={
-                      'badge ' + (s.prioridad === 'alta' ? 'bg-danger'
-                               : s.prioridad === 'media' ? 'bg-warning text-dark' : 'bg-info')
-                    }>{s.prioridad}</span>
-                  </td>
-                  <td style={{ minWidth: 160 }}>
-                    <select className="form-select form-select-sm"
-                            value={s.estado_actual || 'pendiente'}
-                            onChange={(e) => handleCambioEstado(s, e.target.value)}
-                            disabled={guardando === s.id}>
-                      {ESTADOS.map((st) => <option key={st} value={st}>{st}</option>)}
-                    </select>
-                  </td>
-                  <td style={{ minWidth: 260 }}>
-                    <div className="d-flex gap-2">
-                      <select className="form-select form-select-sm"
-                              value={s.tecnico_id || ''}
-                              onChange={(e) => handleAsignarTecnico(s, e.target.value)}
-                              disabled={guardando === s.id}>
-                        <option value="">— Sin asignar —</option>
-                        {tecnicos.map((t) => (
-                          <option key={t.id} value={t.id}>{t.nombre} ({t.email})</option>
-                        ))}
-                      </select>
-                      <button className="btn btn-sm btn-primary"
-                              onClick={() => s.tecnico_id && enviarATecnico(s.id, s.tecnico_id)}
-                              disabled={!s.tecnico_id || guardando === s.id}>
-                        <i className="fas fa-paper-plane me-1"></i> Enviar
-                      </button>
-                    </div>
-                    {s.tecnico_nombre && (
-                      <div className="small text-muted mt-1">Asignado: {s.tecnico_nombre}</div>
+          {error && (
+            <div
+              className="alert alert-danger"
+              style={{ marginBottom: 12 }}
+            >
+              {error}
+            </div>
+          )}
+
+          {cargando ? (
+            <div className="text-muted">Cargando solicitudes...</div>
+          ) : (
+            <>
+              {/* Tarjetas de estadísticas */}
+              <div className="solicitudes-stats">
+                <div className="stat-card">
+                  <h3>Total Solicitudes</h3>
+                  <p className="stat-number">{total}</p>
+                </div>
+                <div className="stat-card">
+                  <h3>Pendientes</h3>
+                  <p className="stat-number warning">{pendientes}</p>
+                </div>
+                <div className="stat-card">
+                  <h3>En Proceso</h3>
+                  <p className="stat-number info">{enProceso}</p>
+                </div>
+                <div className="stat-card">
+                  <h3>Completadas</h3>
+                  <p className="stat-number success">{completadas}</p>
+                </div>
+              </div>
+
+              {/* Tabla principal */}
+              <div className="table-container">
+                <table className="solicitudes-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Fecha</th>
+                      <th>Título</th>
+                      <th>Cliente</th>
+                      <th>Ubicación</th>
+                      <th>Tipo</th>
+                      <th>Prioridad</th>
+                      <th>Estado</th>
+                      <th>Técnico</th>
+                      <th>Detalle</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {solicitudesFiltradas.map((s) => {
+                      const estadoNorm = normalizarEstado(
+                        s.estado_actual || 'pendiente'
+                      );
+                      return (
+                        <tr key={s.id}>
+                          <td className="col-id">{s.id}</td>
+
+                          <td className="col-fecha">
+                            <div className="small-fecha">
+                              {fmtFecha(s.fecha_solicitud)}
+                            </div>
+                          </td>
+
+                          <td className="col-titulo">
+                            <div className="titulo-principal">
+                              {s.titulo}
+                            </div>
+                            <div className="titulo-descripcion">
+                              {s.descripcion}
+                            </div>
+                          </td>
+
+                          <td className="col-cliente">
+                            <div className="cliente-nombre">
+                              {s.cliente_nombre || '-'}
+                            </div>
+                            <div className="cliente-email">
+                              {s.cliente_email || ''}
+                            </div>
+                          </td>
+
+                          <td className="col-ubicacion">
+                            <div>{s.comuna || '-'}</div>
+                            <div className="ubicacion-region">
+                              {s.region || ''}
+                            </div>
+                          </td>
+
+                          <td className="col-tipo">
+                            {s.tipo_servicio || '-'}
+                          </td>
+
+                          <td className="col-prioridad">
+                            <span
+                              className={
+                                'badge-prioridad ' +
+                                (s.prioridad || 'media')
+                              }
+                            >
+                              {s.prioridad || 'media'}
+                            </span>
+                          </td>
+
+                          <td className="col-estado">
+                            <span
+                              className={
+                                'estado-tag ' + estadoNorm
+                              }
+                            >
+                              {labelEstado(estadoNorm)}
+                            </span>
+                            <select
+                              className="estado-select"
+                              value={estadoNorm}
+                              onChange={(e) =>
+                                handleCambioEstado(s, e.target.value)
+                              }
+                              disabled={guardando === s.id}
+                            >
+                              {estadosDisponibles.map((st) => (
+                                <option key={st} value={st}>
+                                  {labelEstado(st)}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+
+                          <td className="col-tecnico">
+                            <div className="tecnico-asignacion">
+                              <select
+                                className="tecnico-select"
+                                value={s.tecnico_id || ''}
+                                onChange={(e) =>
+                                  handleAsignarTecnico(s, e.target.value)
+                                }
+                                disabled={guardando === s.id}
+                              >
+                                <option value="">
+                                  — Sin asignar —
+                                </option>
+                                {tecnicos.map((t) => (
+                                  <option key={t.id} value={t.id}>
+                                    {t.nombre} ({t.email})
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                className="btn-small btn-info"
+                                onClick={() =>
+                                  s.tecnico_id &&
+                                  enviarATecnico(s.id, s.tecnico_id)
+                                }
+                                disabled={!s.tecnico_id || guardando === s.id}
+                                title="Reenviar al técnico"
+                              >
+                                <i className="fas fa-paper-plane"></i>
+                              </button>
+                            </div>
+                            {s.tecnico_nombre && (
+                              <div className="asignado-text">
+                                Asignado: {s.tecnico_nombre}
+                              </div>
+                            )}
+                          </td>
+
+                          <td className="col-detalle">
+                            <button
+                              className="btn-small btn-outline"
+                              disabled
+                              title="(Futuro) Ver detalle completo"
+                            >
+                              <i className="fas fa-eye"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+
+                    {solicitudesFiltradas.length === 0 && (
+                      <tr>
+                        <td colSpan="10" className="sin-datos">
+                          No hay solicitudes que coincidan con la búsqueda.
+                        </td>
+                      </tr>
                     )}
-                  </td>
-                  <td style={{ minWidth: 120 }}>
-                    <button className="btn btn-sm btn-outline-secondary" disabled title="(Futuro) Ver detalle">
-                      <i className="fas fa-eye"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

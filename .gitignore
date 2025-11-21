@@ -1,5 +1,15 @@
+# Node / React
 node_modules/
+dist/
+build/
+
+# Entornos / secretos
 .env
 frontend/.env
-.env
 backend/.env
+
+# Python (ml-service y otros)
+venv/
+ml-service/venv/
+**/__pycache__/
+*.pyc

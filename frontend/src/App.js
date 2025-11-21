@@ -11,7 +11,8 @@ import AdminSolicitudes from './pages/adminSolicitudes';
 import AdminTecnicos from './pages/adminTecnicos';
 import AdminMetricas from './pages/adminMetricas';
 import TecnicoPanel from './pages/tecnicoPanel';
-import AdminCrearUsuario from './pages/adminCrearUsuario'; // 👈 NUEVO
+import AdminCrearUsuario from './pages/adminCrearUsuario';
+import AdminModeloPredictivo from './pages/adminModeloPredictivo'; // 👈 NUEVO
 
 // ---- Guard genérico de rutas protegidas ----
 function RequireAuth({ roles, children }) {
@@ -85,6 +86,15 @@ export default function App() {
           element={
             <RequireAuth roles={['administrador', 'admin']}>
               <AdminCrearUsuario />
+            </RequireAuth>
+          }
+        />
+        {/* NUEVO: Modelo predictivo */}
+        <Route
+          path="/admin/modelo-predictivo"
+          element={
+            <RequireAuth roles={['administrador', 'admin']}>
+              <AdminModeloPredictivo />
             </RequireAuth>
           }
         />

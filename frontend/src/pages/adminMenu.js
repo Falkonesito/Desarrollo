@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/admin.css';
+import { api } from '../utils/api.js';
 
 const AdminMenu = () => {
   const navigate = useNavigate();
@@ -38,6 +39,13 @@ const AdminMenu = () => {
       description: 'Métricas de rendimiento y productividad',
       icon: 'fas fa-chart-line',
       path: '/admin/metricas'
+    },
+    {
+      id: 'modeloPredictivo',
+      title: 'Modelo Predictivo',
+      description: 'Evaluar riesgo con IA para las solicitudes',
+      icon: 'fas fa-brain',
+      path: '/admin/modelo-predictivo'
     }
   ];
 

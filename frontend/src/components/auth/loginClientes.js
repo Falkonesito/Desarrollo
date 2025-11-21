@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/auth.css';
-import { api } from '../../utils/api.js'; // 👈 usa el helper real y evita importar apiFetch si no lo usas
+import { api } from '../../utils/api.js'; // 👈 usa el helper real
 
 const LoginClientes = () => {
   const [credenciales, setCredenciales] = useState({ email: '', password: '' });
@@ -23,9 +23,13 @@ const LoginClientes = () => {
       const data = await api.post('/api/auth/login', credenciales, { auth: false });
 
       if (data?.success && data?.user) {
-        // guarda token + usuario
-        if (data.token) localStorage.setItem('authToken', data.token);
+        // Guarda token en ambas claves para compatibilidad con otros módulos (ml.js)
+        if (data.token) {
+          localStorage.setItem('authToken', data.token); // ya lo tenías
+          localStorage.setItem('token', data.token);     // 👈 nuevo alias
+        }
         localStorage.setItem('userData', JSON.stringify(data.user));
+
         manejarLoginExitoso(data.user);
       } else {
         setError(data?.message || 'Credenciales incorrectas');
@@ -38,13 +42,13 @@ const LoginClientes = () => {
   };
 
   const manejarLoginExitoso = (userData) => {
-    // limpia banderas antiguas
+    // Limpia banderas antiguas
     localStorage.removeItem('adminLoggedIn');
     localStorage.removeItem('tecnicoLoggedIn');
     localStorage.removeItem('clienteLoggedIn');
     localStorage.removeItem('clienteActual');
 
-    // ⚠️ Importante: el backend devuelve 'administrador' | 'tecnico' | 'cliente'
+    // ⚠️ El backend devuelve 'administrador' | 'tecnico' | 'cliente'
     if (userData.rol === 'administrador') {
       localStorage.setItem('adminLoggedIn', 'true');
       localStorage.setItem('userData', JSON.stringify(userData));

@@ -130,3 +130,50 @@
     grid-template-columns: 1fr;
   }
 }
+
+.badge-low {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: #2ecc71;
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.badge-medium {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: #f1c40f;
+  color: #000;
+  font-size: 0.85rem;
+}
+
+.badge-high {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: #e74c3c;
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.badge-neutral {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background-color: #bdc3c7;
+  color: #2c3e50;
+  font-size: 0.85rem;
+}
+/* --- INFOSER ML --- */
+.menu-card h3, .menu-card h4 {
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+.admin-menu-header .header-content h1 {
+  color: #0f172a;
+}
+.admin-menu-container {
+  background: #f6f8fc;
+}

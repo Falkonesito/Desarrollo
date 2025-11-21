@@ -3,14 +3,18 @@
 
 const API_URL =
   (typeof process !== 'undefined' && process.env.REACT_APP_API_URL) ||
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) ||
+  (typeof import.meta !== 'undefined' &&
+    import.meta.env &&
+    import.meta.env.VITE_API_URL) ||
   'http://localhost:5000';
 
 /** Normaliza la ruta y asegura prefijo /api cuando corresponda */
 function normalizeUrl(path) {
   if (!path) return `${API_URL}/api`;
   if (/^https?:\/\//i.test(path)) return path;
-  const p = path.startsWith('/api') ? path : `/api${path.startsWith('/') ? path : `/${path}`}`;
+  const p = path.startsWith('/api')
+    ? path
+    : `/api${path.startsWith('/') ? path : `/${path}`}`;
   return `${API_URL}${p}`;
 }
 
@@ -47,7 +51,8 @@ async function raw(path, options = {}) {
     ...rest
   } = options;
 
-  const isFormData = typeof FormData !== 'undefined' && bodyIn instanceof FormData;
+  const isFormData =
+    typeof FormData !== 'undefined' && bodyIn instanceof FormData;
 
   const headers = {
     ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
@@ -71,8 +76,8 @@ async function raw(path, options = {}) {
     fetchOpts.body = isFormData
       ? bodyIn
       : typeof bodyIn === 'object'
-        ? JSON.stringify(bodyIn)
-        : bodyIn;
+      ? JSON.stringify(bodyIn)
+      : bodyIn;
   }
 
   const res = await fetch(url, fetchOpts);
@@ -113,24 +118,43 @@ export async function apiFetch(path, options = {}) {
 
 // Azúcar sintáctico (JSON)
 export const api = {
-  get:   (path, opts)        => raw(path, { ...(opts || {}), method: 'GET' }),
-  post:  (path, body, opts)  => raw(path, { ...(opts || {}), method: 'POST',  body }),
-  put:   (path, body, opts)  => raw(path, { ...(opts || {}), method: 'PUT',   body }),
-  patch: (path, body, opts)  => raw(path, { ...(opts || {}), method: 'PATCH', body }),
-  del:   (path, opts)        => raw(path, { ...(opts || {}), method: 'DELETE' }),
+  get: (path, opts) => raw(path, { ...(opts || {}), method: 'GET' }),
+  post: (path, body, opts) =>
+    raw(path, { ...(opts || {}), method: 'POST', body }),
+  put: (path, body, opts) =>
+    raw(path, { ...(opts || {}), method: 'PUT', body }),
+  patch: (path, body, opts) =>
+    raw(path, { ...(opts || {}), method: 'PATCH', body }),
+  del: (path, opts) =>
+    raw(path, { ...(opts || {}), method: 'DELETE' }),
 
   // No auth
-  getNoAuth:  (path, opts)       => raw(path, { ...(opts || {}), method: 'GET',  auth: false }),
-  postNoAuth: (path, body, opts) => raw(path, { ...(opts || {}), method: 'POST', body, auth: false }),
+  getNoAuth: (path, opts) =>
+    raw(path, { ...(opts || {}), method: 'GET', auth: false }),
+  postNoAuth: (path, body, opts) =>
+    raw(path, { ...(opts || {}), method: 'POST', body, auth: false }),
 
   // FormData
-  postForm:  (path, formData, opts) => raw(path, { ...(opts || {}), method: 'POST',  body: formData }),
-  putForm:   (path, formData, opts) => raw(path, { ...(opts || {}), method: 'PUT',   body: formData }),
-  patchForm: (path, formData, opts) => raw(path, { ...(opts || {}), method: 'PATCH', body: formData }),
+  postForm: (path, formData, opts) =>
+    raw(path, { ...(opts || {}), method: 'POST', body: formData }),
+  putForm: (path, formData, opts) =>
+    raw(path, { ...(opts || {}), method: 'PUT', body: formData }),
+  patchForm: (path, formData, opts) =>
+    raw(path, { ...(opts || {}), method: 'PATCH', body: formData }),
 
   // Descargas
-  getBlob: (path, opts) => raw(path, { ...(opts || {}), method: 'GET', responseType: 'blob' }),
-  getText: (path, opts) => raw(path, { ...(opts || {}), method: 'GET', responseType: 'text' }),
+  getBlob: (path, opts) =>
+    raw(path, {
+      ...(opts || {}),
+      method: 'GET',
+      responseType: 'blob',
+    }),
+  getText: (path, opts) =>
+    raw(path, {
+      ...(opts || {}),
+      method: 'GET',
+      responseType: 'text',
+    }),
 };
 
 export { API_URL, withQuery, normalizeUrl };
