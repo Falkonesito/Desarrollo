@@ -32,7 +32,7 @@ async function forecastML(body) {
 
     // Si falla la conexión (ECONNREFUSED), lanzamos error claro
     if (error.cause && error.cause.code === 'ECONNREFUSED') {
-      throw new Error('El servicio de ML (Python) no está disponible. Asegúrate de ejecutarlo en el puerto 8000.');
+      throw new Error(`El servicio de ML (Python) no está disponible en ${ML_SERVICE_URL}. Asegúrate de que esté corriendo.`);
     }
     throw error;
   }
