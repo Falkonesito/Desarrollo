@@ -1,0 +1,39 @@
+services:
+  # --------------------------------------------------------------------------------
+  # 1. ML SERVICE (Python)
+  # --------------------------------------------------------------------------------
+  - type: web
+    name: infoser-ml-service
+    runtime: python
+    region: oregon
+    plan: free
+    rootDir: ml-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 8001
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: PORT
+        value: 8001
+
+  # --------------------------------------------------------------------------------
+  # 2. BACKEND (Node.js)
+  # --------------------------------------------------------------------------------
+  - type: web
+    name: infoser-backend
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: ML_SERVICE_URL
+        fromService:
+          type: web
+          name: infoser-ml-service
+          property: url
+      # Asegúrate de agregar tus variables de entorno reales en el Dashboard de Render
+      # DB_HOST, DB_PASSWORD, etc.
