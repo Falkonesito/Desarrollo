@@ -18,67 +18,17 @@ const Home = () => {
     equipos_solicitados: '',
     comentarios_finales: ''
   });
-  const [mostrarFormulario, setMostrarFormulario] = useState(false);
-  const [cargando, setCargando] = useState(false);
-  const [, setError] = useState('');                // solo usamos el setter (evita warning)
-  const navigate = useNavigate();
+  const [mostrarSolicitudes, setMostrarSolicitudes] = useState(false);
 
-  const comunasRM = [
-    'Melipilla', 'Santiago', 'Providencia', 'Las Condes', 'Ñuñoa', 'La Reina',
-    'Macul', 'Peñalolén', 'La Florida', 'Puente Alto', 'San Bernardo',
-    'Maipú', 'Cerrillos', 'Quilicura', 'Recoleta', 'Independencia', 'Conchalí',
-    'Renca', 'Quinta Normal', 'Lo Prado', 'Pudahuel', 'Cerro Navia', 'Lo Espejo',
-    'Pedro Aguirre Cerda', 'San Miguel', 'San Joaquín', 'La Granja', 'La Pintana',
-    'El Bosque', 'San Ramón', 'Lo Barnechea', 'Vitacura', 'Huechuraba', 'Colina',
-    'Lampa', 'Til Til', 'San José de Maipo', 'Pirque', 'Talagante'
-  ];
+  // ... (existing code)
 
-  const tiposServicio = [
-    { value: 'instalacion',   label: 'Instalación' },
-    { value: 'mantenimiento', label: 'Mantenimiento' },
-    { value: 'reparacion',    label: 'Reparación' },
-    { value: 'asesoria',      label: 'Asesoría' }
-  ];
-
-  const prioridades = [
-    { value: 'baja',  label: 'Baja' },
-    { value: 'media', label: 'Media' },
-    { value: 'alta',  label: 'Alta' }
-  ];
-
-  // Cargar cliente y sus solicitudes al montar
-  useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('userData') || 'null');
-    const clienteActual = JSON.parse(localStorage.getItem('clienteActual') || 'null');
-    const isCliente = (userData?.rol === 'cliente') || !!clienteActual;
-
-    const c = clienteActual || (isCliente ? userData : null);
-    if (!c) return;
-
-    setCliente(c);
-    cargarSolicitudes(c.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const cargarSolicitudes = async (clienteId) => {
-    setError('');
-    try {
-      const data = await api.get(`/api/solicitudes/cliente/${clienteId}`);
-      setSolicitudes(data.solicitudes || []);
-    } catch (err) {
-      setError(err.message || 'No se pudieron cargar las solicitudes');
+  const handleVerSolicitudes = () => {
+    if (!cliente) {
+      navigate('/login');
+    } else {
+      setMostrarSolicitudes(true);
+      setMostrarFormulario(false);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('clienteActual');
-    localStorage.removeItem('clienteLoggedIn');
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    setCliente(null);
-    setSolicitudes([]);
-    setMostrarFormulario(false);
-    window.location.reload();
   };
 
   const handleSolicitarServicio = () => {
@@ -86,65 +36,232 @@ const Home = () => {
       navigate('/login');
     } else {
       setMostrarFormulario(true);
+      setMostrarSolicitudes(false);
     }
   };
 
+  // ... (existing code)
+
+  // ======= VISTA MIS SOLICITUDES =======
+  if (cliente && mostrarSolicitudes) {
+    return (
+      <div className="home-page">
+        <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+          <div className="container">
+            <Link className="navbar-brand" to="/">
+              <i className="fas fa-shield-alt me-2"></i>
+              <strong>INFOSER</strong> & EP SPA
+            </Link>
+            <div className="navbar-nav ms-auto align-items-center">
+              <div className="d-flex align-items-center text-light me-3">
+                <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style={{ width: 32, height: 32 }}>
+                  {cliente.nombre.charAt(0).toUpperCase()}
+                </div>
+                <span className="fw-medium">{cliente.nombre}</span>
+              </div>
+              <button
+                className="btn btn-outline-light btn-sm"
+                onClick={() => setMostrarSolicitudes(false)}
+              >
+                <i className="fas fa-arrow-left me-1"></i>Volver al Inicio
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        <section className="container my-5">
+          <div className="row justify-content-center">
+            <div className="col-lg-10">
+              <div className="card shadow">
+                <div className="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                  <h4 className="mb-0">
+                    <i className="fas fa-list-ul me-2"></i>Mis Solicitudes
+                  </h4>
+                  <button className="btn btn-light btn-sm text-info" onClick={handleSolicitarServicio}>
+                    <i className="fas fa-plus me-1"></i>Nueva Solicitud
+                  </button>
+                </div>
+                <div className="card-body p-0">
+                  {solicitudes.length === 0 ? (
+                    <div className="text-center p-5">
+                      <i className="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                      <p className="text-muted">No tienes solicitudes registradas aún.</p>
+                      <button className="btn btn-primary" onClick={handleSolicitarServicio}>
+                        Crear mi primera solicitud
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="table-responsive">
+                      <table className="table table-hover mb-0">
+                        <thead className="table-light">
+                          <tr>
+                            <th>ID</th>
+                            <th>Título</th>
+                            <th>Servicio</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {solicitudes.map((sol) => (
+                            <tr key={sol.id}>
+                              <td>#{sol.id}</td>
+                              <td>{sol.titulo}</td>
+                              <td>
+                                <span className="badge bg-light text-dark border">
+                                  {tiposServicio.find(t => t.value === sol.tipo_servicio)?.label || sol.tipo_servicio}
+                                </span>
+                              </td>
+                              <td>{new Date(sol.fecha_creacion).toLocaleDateString()}</td>
+                              <td>
+                                <span className={`badge ${sol.estado === 'pendiente' ? 'bg-warning text-dark' :
+                                    sol.estado === 'en_proceso' ? 'bg-info text-white' :
+                                      sol.estado === 'completada' ? 'bg-success' :
+                                        'bg-secondary'
+                                  }`}>
+                                  {sol.estado.toUpperCase().replace('_', ' ')}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  // ======= VISTA HOME NORMAL =======
+  return (
+    <div className="home-page">
+      <nav id="inicio" className="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div className="container">
+          <Link className="navbar-brand" to="/">
+            <i className="fas fa-shield-alt me-2"></i>
+            <strong>INFOSER</strong> & EP SPA
+          </Link>
+          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse" id="navbarNav">
+            <ul className="navbar-nav ms-auto align-items-center">
+              <li className="nav-item"><a className="nav-link" href="#inicio">Inicio</a></li>
+              <li className="nav-item"><a className="nav-link" href="#servicios">Servicios</a></li>
+              <li className="nav-item"><a className="nav-link" href="#proceso">Proceso</a></li>
+              <li className="nav-item"><a className="nav-link" href="#contacto">Contacto</a></li>
+
+              {!cliente ? (
+                <>
+                  <li className="nav-item"><Link className="nav-link" to="/login">Iniciar Sesión</Link></li>
+                  <li className="nav-item"><Link className="nav-link" to="/registro">Registrarse</Link></li>
+                </>
+              ) : (
+                <>
+                  <li className="nav-item ms-2">
+                    <div className="dropdown">
+                      <button
+                        className="btn btn-outline-secondary border-0 text-light dropdown-toggle d-flex align-items-center"
+                        type="button"
+                        id="userDropdown"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style={{ width: 32, height: 32 }}>
+                          {cliente.nombre.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="me-1">{cliente.nombre}</span>
+                      </button>
+                      <ul className="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="userDropdown">
+                        <li><h6 className="dropdown-header">Mi Cuenta</h6></li>
+                        <li>
+                          <button className="dropdown-item" onClick={handleVerSolicitudes}>
+                            <i className="fas fa-list-ul me-2"></i>Mis Solicitudes
+                          </button>
+                        </li>
+                        <li><hr className="dropdown-divider" /></li>
+                        <li>
+                          <button className="dropdown-item text-danger" onClick={handleLogout}>
+                            <i className="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+
+                  <li className="nav-item ms-2">
+                    <button className="btn btn-primary btn-sm" onClick={handleSolicitarServicio}>
+                      <i className="fas fa-plus me-1"></i> Nueva Solicitud
+                    </button>
+                  </li>
+                </>
+              )}
+            </ul>
+          </div>
+        </div>
+      </nav>
+
   const handleSolicitudChange = (e) => {
-    const { name, value } = e.target;
-    setNuevaSolicitud((prev) => ({ ...prev, [name]: value }));
+    const {name, value} = e.target;
+    setNuevaSolicitud((prev) => ({...prev, [name]: value }));
   };
 
   const crearSolicitud = async (e) => {
-    e.preventDefault();
-    setCargando(true);
-    setError('');
+        e.preventDefault();
+      setCargando(true);
+      setError('');
 
-    if (!nuevaSolicitud.titulo || !nuevaSolicitud.descripcion || !nuevaSolicitud.direccion_servicio || !nuevaSolicitud.comuna) {
-      alert('Por favor complete todos los campos obligatorios (*)');
+      if (!nuevaSolicitud.titulo || !nuevaSolicitud.descripcion || !nuevaSolicitud.direccion_servicio || !nuevaSolicitud.comuna) {
+        alert('Por favor complete todos los campos obligatorios (*)');
       setCargando(false);
       return;
     }
 
-    const datosSolicitud = {
-      ...nuevaSolicitud,
-      cliente_id: cliente.id,
+      const datosSolicitud = {
+        ...nuevaSolicitud,
+        cliente_id: cliente.id,
       cliente_nombre: cliente.nombre,
       cliente_email: cliente.email
     };
 
-    try {
+      try {
       const data = await api.post('/api/solicitudes', datosSolicitud);
       if (data?.success) {
         alert('¡Solicitud creada exitosamente! Será revisada por nuestro equipo.');
-        resetearFormulario();
-        await cargarSolicitudes(cliente.id);
+      resetearFormulario();
+      await cargarSolicitudes(cliente.id);
       } else {
         alert(`Error al crear solicitud: ${data?.message || 'Desconocido'}`);
       }
     } catch (err) {
-      alert(err.message || 'Error al conectar con el servidor');
+        alert(err.message || 'Error al conectar con el servidor');
     } finally {
-      setCargando(false);
+        setCargando(false);
     }
   };
 
   const resetearFormulario = () => {
-    setNuevaSolicitud({
-      titulo: '',
-      descripcion: '',
-      direccion_servicio: '',
-      comuna: '',
-      region: 'Región Metropolitana',
-      tipo_servicio: 'instalacion',
-      prioridad: 'media',
-      equipos_solicitados: '',
-      comentarios_finales: ''
-    });
-    setMostrarFormulario(false);
+        setNuevaSolicitud({
+          titulo: '',
+          descripcion: '',
+          direccion_servicio: '',
+          comuna: '',
+          region: 'Región Metropolitana',
+          tipo_servicio: 'instalacion',
+          prioridad: 'media',
+          equipos_solicitados: '',
+          comentarios_finales: ''
+        });
+      setMostrarFormulario(false);
   };
 
-  // ======= VISTA FORMULARIO (cuando el cliente decide crear una solicitud) =======
-  if (cliente && mostrarFormulario) {
+      // ======= VISTA FORMULARIO (cuando el cliente decide crear una solicitud) =======
+      if (cliente && mostrarFormulario) {
     return (
       <div className="home-page">
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -380,177 +497,177 @@ const Home = () => {
           </div>
         </section>
       </div>
-    );
+      );
   }
 
-  // ======= VISTA HOME NORMAL =======
-  return (
-    <div className="home-page">
-      <nav id="inicio" className="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div className="container">
-          <Link className="navbar-brand" to="/">
-            <i className="fas fa-shield-alt me-2"></i>
-            <strong>INFOSER</strong> & EP SPA
-          </Link>
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav ms-auto">
-              <li className="nav-item"><a className="nav-link" href="#inicio">Inicio</a></li>
-              <li className="nav-item"><a className="nav-link" href="#servicios">Servicios</a></li>
-              <li className="nav-item"><a className="nav-link" href="#proceso">Proceso</a></li>
-              <li className="nav-item"><a className="nav-link" href="#contacto">Contacto</a></li>
+      // ======= VISTA HOME NORMAL =======
+      return (
+      <div className="home-page">
+        <nav id="inicio" className="navbar navbar-expand-lg navbar-dark bg-dark">
+          <div className="container">
+            <Link className="navbar-brand" to="/">
+              <i className="fas fa-shield-alt me-2"></i>
+              <strong>INFOSER</strong> & EP SPA
+            </Link>
+            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+              <span className="navbar-toggler-icon"></span>
+            </button>
+            <div className="collapse navbar-collapse" id="navbarNav">
+              <ul className="navbar-nav ms-auto">
+                <li className="nav-item"><a className="nav-link" href="#inicio">Inicio</a></li>
+                <li className="nav-item"><a className="nav-link" href="#servicios">Servicios</a></li>
+                <li className="nav-item"><a className="nav-link" href="#proceso">Proceso</a></li>
+                <li className="nav-item"><a className="nav-link" href="#contacto">Contacto</a></li>
 
-              {!cliente ? (
-                <>
-                  <li className="nav-item"><Link className="nav-link" to="/login">Iniciar Sesión</Link></li>
-                  <li className="nav-item"><Link className="nav-link" to="/registro">Registrarse</Link></li>
-                </>
-              ) : (
-                <>
-                  <li className="nav-item">
-                    <span className="nav-link text-success">
-                      <i className="fas fa-user me-1"></i>{cliente.nombre}
-                    </span>
-                  </li>
-                  <li className="nav-item">
-                    <button className="btn btn-outline-light btn-sm ms-2" onClick={handleLogout}>
-                      Cerrar Sesión
-                    </button>
-                  </li>
-                </>
-              )}
+                {!cliente ? (
+                  <>
+                    <li className="nav-item"><Link className="nav-link" to="/login">Iniciar Sesión</Link></li>
+                    <li className="nav-item"><Link className="nav-link" to="/registro">Registrarse</Link></li>
+                  </>
+                ) : (
+                  <>
+                    <li className="nav-item">
+                      <span className="nav-link text-success">
+                        <i className="fas fa-user me-1"></i>{cliente.nombre}
+                      </span>
+                    </li>
+                    <li className="nav-item">
+                      <button className="btn btn-outline-light btn-sm ms-2" onClick={handleLogout}>
+                        Cerrar Sesión
+                      </button>
+                    </li>
+                  </>
+                )}
 
-              <li className="nav-item">
-                <button className="btn btn-primary btn-sm ms-2" onClick={handleSolicitarServicio}>
-                  <i className="fas fa-paper-plane me-1"></i>
-                  {cliente ? 'Nueva Solicitud' : 'Solicitar Servicio'}
-                </button>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
-
-      {/* HERO */}
-      <section className="hero-section py-5" style={{background:'linear-gradient(135deg,#0d47a1 0%, #1565c0 100%)'}}>
-        <div className="container">
-          <div className="row align-items-center" style={{minHeight: '60vh'}}>
-            <div className="col-lg-6 text-white">
-              <h1 className="mb-3">Protección Profesional para lo que más Importa</h1>
-              <p className="lead opacity-75">
-                Sistemas de seguridad confiables para hogares y empresas. Instalación experta y mantenimiento.
-              </p>
-              <div className="mt-4">
-                <button className="btn btn-light btn-lg me-3" onClick={handleSolicitarServicio}>
-                  <i className="fas fa-tools me-2"></i>
-                  {cliente ? 'Nueva Solicitud' : 'Solicitar Servicio'}
-                </button>
-                <a href="#servicios" className="btn btn-outline-light btn-lg">
-                  <i className="fas fa-info-circle me-2"></i>Más Información
-                </a>
-              </div>
-            </div>
-            <div className="col-lg-6 text-center text-white">
-              <i className="fas fa-shield-alt" style={{fontSize: 140, opacity: .85}}></i>
+                <li className="nav-item">
+                  <button className="btn btn-primary btn-sm ms-2" onClick={handleSolicitarServicio}>
+                    <i className="fas fa-paper-plane me-1"></i>
+                    {cliente ? 'Nueva Solicitud' : 'Solicitar Servicio'}
+                  </button>
+                </li>
+              </ul>
             </div>
           </div>
-        </div>
-      </section>
+        </nav>
 
-      {/* SERVICIOS */}
-      <section id="servicios" className="py-5 bg-light">
-        <div className="container">
-          <div className="text-center mb-5">
-            <h2 className="section-title">Nuestros Servicios</h2>
-            <p className="section-subtitle">Soluciones de seguridad adaptadas a tus necesidades</p>
-          </div>
-
-          <div className="row">
-            {/* Instalación de Cámaras */}
-            <div className="col-md-6 mb-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body">
-                  <h4 className="mb-3">
-                    <i className="fas fa-camera me-2"></i>
-                    Instalación de Cámaras de Seguridad
-                  </h4>
-                  <p className="text-muted">
-                    Diseño e implementación completa del sistema, desde el levantamiento en terreno hasta la
-                    puesta en marcha y capacitación básica.
-                  </p>
-                  <ul className="mb-3">
-                    <li>Planificación de cobertura y ángulos ciegos (croquis + recomendaciones).</li>
-                    <li>Cámaras <strong>ColorVu</strong> 24/7 a color y <strong>PTZ</strong> con zoom óptico hasta 25×.</li>
-                    <li>Canalizado, cableado estructurado y rotulación de puntos.</li>
-                    <li>Grabadores <strong>DVR/NVR</strong>, discos de vigilancia y dimensionamiento de almacenamiento.</li>
-                    <li>Configuración de red, acceso remoto seguro (P2P/VPN), app móvil y perfiles de usuario.</li>
-                    <li>Entrega de documentación: claves iniciales, mapa de cámaras y ficha técnica.</li>
-                  </ul>
-                  <div className="small text-muted">
-                    Opcionales: analítica de video (detección de personas/vehículos), audio disuasivo,
-                    integración con alarmas y control de acceso.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Mantenimiento (preventivo y correctivo) */}
-            <div className="col-md-6 mb-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body">
-                  <h4 className="mb-3">
+        {/* HERO */}
+        <section className="hero-section py-5" style={{ background: 'linear-gradient(135deg,#0d47a1 0%, #1565c0 100%)' }}>
+          <div className="container">
+            <div className="row align-items-center" style={{ minHeight: '60vh' }}>
+              <div className="col-lg-6 text-white">
+                <h1 className="mb-3">Protección Profesional para lo que más Importa</h1>
+                <p className="lead opacity-75">
+                  Sistemas de seguridad confiables para hogares y empresas. Instalación experta y mantenimiento.
+                </p>
+                <div className="mt-4">
+                  <button className="btn btn-light btn-lg me-3" onClick={handleSolicitarServicio}>
                     <i className="fas fa-tools me-2"></i>
-                    Mantenimiento de Cámaras (Preventivo y Correctivo)
-                  </h4>
-                  <p className="text-muted">
-                    Mantén tu sistema operando al 100% con planes programados y soporte cuando algo falla.
-                  </p>
+                    {cliente ? 'Nueva Solicitud' : 'Solicitar Servicio'}
+                  </button>
+                  <a href="#servicios" className="btn btn-outline-light btn-lg">
+                    <i className="fas fa-info-circle me-2"></i>Más Información
+                  </a>
+                </div>
+              </div>
+              <div className="col-lg-6 text-center text-white">
+                <i className="fas fa-shield-alt" style={{ fontSize: 140, opacity: .85 }}></i>
+              </div>
+            </div>
+          </div>
+        </section>
 
-                  <h6 className="mt-3">Preventivo (programado)</h6>
-                  <ul className="mb-3">
-                    <li>Limpieza de lentes y carcasas; revisión de sellos IP y soportes.</li>
-                    <li>Verificación de fuentes, POE, voltajes y conectores.</li>
-                    <li>Chequeo de ángulos, enfoque y perfil de imagen (día/noche).</li>
-                    <li>Actualización de firmware (cámaras/NVR) y respaldo de configuración.</li>
-                    <li>Pruebas de grabación, retención de video y salud de discos (S.M.A.R.T.).</li>
-                    <li>Informe técnico con hallazgos, evidencias y recomendaciones.</li>
-                  </ul>
+        {/* SERVICIOS */}
+        <section id="servicios" className="py-5 bg-light">
+          <div className="container">
+            <div className="text-center mb-5">
+              <h2 className="section-title">Nuestros Servicios</h2>
+              <p className="section-subtitle">Soluciones de seguridad adaptadas a tus necesidades</p>
+            </div>
 
-                  <h6>Correctivo (bajo demanda)</h6>
-                  <ul className="mb-3">
-                    <li>Diagnóstico en sitio y reemplazo de componentes defectuosos.</li>
-                    <li>Reconfiguración de red, puertos y usuarios; recuperación de acceso.</li>
-                    <li>Reubicación de cámaras y recalibración de detecciones.</li>
-                  </ul>
+            <div className="row">
+              {/* Instalación de Cámaras */}
+              <div className="col-md-6 mb-4">
+                <div className="card h-100 shadow-sm">
+                  <div className="card-body">
+                    <h4 className="mb-3">
+                      <i className="fas fa-camera me-2"></i>
+                      Instalación de Cámaras de Seguridad
+                    </h4>
+                    <p className="text-muted">
+                      Diseño e implementación completa del sistema, desde el levantamiento en terreno hasta la
+                      puesta en marcha y capacitación básica.
+                    </p>
+                    <ul className="mb-3">
+                      <li>Planificación de cobertura y ángulos ciegos (croquis + recomendaciones).</li>
+                      <li>Cámaras <strong>ColorVu</strong> 24/7 a color y <strong>PTZ</strong> con zoom óptico hasta 25×.</li>
+                      <li>Canalizado, cableado estructurado y rotulación de puntos.</li>
+                      <li>Grabadores <strong>DVR/NVR</strong>, discos de vigilancia y dimensionamiento de almacenamiento.</li>
+                      <li>Configuración de red, acceso remoto seguro (P2P/VPN), app móvil y perfiles de usuario.</li>
+                      <li>Entrega de documentación: claves iniciales, mapa de cámaras y ficha técnica.</li>
+                    </ul>
+                    <div className="small text-muted">
+                      Opcionales: analítica de video (detección de personas/vehículos), audio disuasivo,
+                      integración con alarmas y control de acceso.
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                  <div className="small text-muted">
-                    Planes con <strong>SLA</strong> (tiempos de respuesta) y frecuencia: mensual, bimestral o trimestral.
-                    Atención 24/7 para clientes con plan activo.
+              {/* Mantenimiento (preventivo y correctivo) */}
+              <div className="col-md-6 mb-4">
+                <div className="card h-100 shadow-sm">
+                  <div className="card-body">
+                    <h4 className="mb-3">
+                      <i className="fas fa-tools me-2"></i>
+                      Mantenimiento de Cámaras (Preventivo y Correctivo)
+                    </h4>
+                    <p className="text-muted">
+                      Mantén tu sistema operando al 100% con planes programados y soporte cuando algo falla.
+                    </p>
+
+                    <h6 className="mt-3">Preventivo (programado)</h6>
+                    <ul className="mb-3">
+                      <li>Limpieza de lentes y carcasas; revisión de sellos IP y soportes.</li>
+                      <li>Verificación de fuentes, POE, voltajes y conectores.</li>
+                      <li>Chequeo de ángulos, enfoque y perfil de imagen (día/noche).</li>
+                      <li>Actualización de firmware (cámaras/NVR) y respaldo de configuración.</li>
+                      <li>Pruebas de grabación, retención de video y salud de discos (S.M.A.R.T.).</li>
+                      <li>Informe técnico con hallazgos, evidencias y recomendaciones.</li>
+                    </ul>
+
+                    <h6>Correctivo (bajo demanda)</h6>
+                    <ul className="mb-3">
+                      <li>Diagnóstico en sitio y reemplazo de componentes defectuosos.</li>
+                      <li>Reconfiguración de red, puertos y usuarios; recuperación de acceso.</li>
+                      <li>Reubicación de cámaras y recalibración de detecciones.</li>
+                    </ul>
+
+                    <div className="small text-muted">
+                      Planes con <strong>SLA</strong> (tiempos de respuesta) y frecuencia: mensual, bimestral o trimestral.
+                      Atención 24/7 para clientes con plan activo.
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* FOOTER */}
-      <footer id="contacto" className="py-4 bg-dark text-white">
-        <div className="container d-flex justify-content-between">
-          <div>
-            <h5><i className="fas fa-shield-alt me-2"></i>INFOSER & EP SPA</h5>
-            <small>© 2024 Todos los derechos reservados</small>
+        {/* FOOTER */}
+        <footer id="contacto" className="py-4 bg-dark text-white">
+          <div className="container d-flex justify-content-between">
+            <div>
+              <h5><i className="fas fa-shield-alt me-2"></i>INFOSER & EP SPA</h5>
+              <small>© 2024 Todos los derechos reservados</small>
+            </div>
+            <div className="text-end">
+              <div><i className="fas fa-envelope me-2"></i>infoserepspa@gmail.com</div>
+              <div><i className="fas fa-phone me-2"></i>+56 9 7719 6032</div>
+            </div>
           </div>
-          <div className="text-end">
-            <div><i className="fas fa-envelope me-2"></i>infoserepspa@gmail.com</div>
-            <div><i className="fas fa-phone me-2"></i>+56 9 7719 6032</div>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
+        </footer>
+      </div>
+      );
 };
 
-export default Home;
+      export default Home;
