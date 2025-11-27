@@ -438,9 +438,9 @@ const Home = () => {
                           ))}
                         </select>
                         <div className="form-text">
-                          {nuevaSolicitud.prioridad === 'alta' && '⚠️ Servicio urgente - Respuesta inmediata'}
-                          {nuevaSolicitud.prioridad === 'media' && '⏱️ Servicio estándar - Respuesta en 24-48 horas'}
-                          {nuevaSolicitud.prioridad === 'baja' && '📅 Servicio programado - Respuesta en 3-5 días'}
+                          {nuevaSolicitud.prioridad === 'alta' && '⚠️ Servicio urgente - Respuesta en 4 días'}
+                          {nuevaSolicitud.prioridad === 'media' && '⏱️ Servicio estándar - Respuesta en 1-2 semanas'}
+                          {nuevaSolicitud.prioridad === 'baja' && '📅 Servicio programado - Respuesta en 1 mes'}
                         </div>
                       </div>
                     </div>

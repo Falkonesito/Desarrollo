@@ -14,6 +14,8 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     color: var(--dark-gray);
+    background-color: var(--white);
+    min-height: 100vh;
 }
 
 /* Navigation */
@@ -270,7 +272,8 @@
     background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
 }
 
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
     border-color: var(--accent-blue);
     box-shadow: 0 0 0 0.2rem rgba(49, 130, 206, 0.25);
 }
@@ -314,10 +317,21 @@
 }
 
 /* Badges de prioridad */
-.badge.bg-danger { background-color: #e53e3e !important; }
-.badge.bg-warning { background-color: #d69e2e !important; }
-.badge.bg-info { background-color: #3182ce !important; }
-.badge.bg-success { background-color: #38a169 !important; }
+.badge.bg-danger {
+    background-color: #e53e3e !important;
+}
+
+.badge.bg-warning {
+    background-color: #d69e2e !important;
+}
+
+.badge.bg-info {
+    background-color: #3182ce !important;
+}
+
+.badge.bg-success {
+    background-color: #38a169 !important;
+}
 
 /* Mejoras para el formulario de solicitud */
 .solicitud-form-container {
@@ -364,33 +378,33 @@
     .hero-title {
         font-size: 2rem;
     }
-    
+
     .hero-subtitle {
         font-size: 1rem;
     }
-    
+
     .section-title {
         font-size: 2rem;
     }
-    
+
     .hero-image i {
         font-size: 8rem;
     }
-    
+
     .hero-image .fa-laptop-code {
         font-size: 8rem;
     }
-    
+
     .cta-title {
         font-size: 1.5rem;
     }
-    
+
     .hero-buttons .btn {
         display: block;
         width: 100%;
         margin-bottom: 1rem;
     }
-    
+
     .hero-buttons .me-3 {
         margin-right: 0 !important;
     }
@@ -420,6 +434,7 @@
 
 /* Mejoras de accesibilidad */
 @media (prefers-reduced-motion: reduce) {
+
     .service-card,
     .process-step,
     .solicitud-card,
@@ -449,7 +464,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
     transform: translateX(-100%);
 }
 
