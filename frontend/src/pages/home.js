@@ -19,8 +19,68 @@ const Home = () => {
     comentarios_finales: ''
   });
   const [mostrarSolicitudes, setMostrarSolicitudes] = useState(false);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [cargando, setCargando] = useState(false);
+  const [, setError] = useState('');                // solo usamos el setter (evita warning)
+  const navigate = useNavigate();
 
-  // ... (existing code)
+  const comunasRM = [
+    'Melipilla', 'Santiago', 'Providencia', 'Las Condes', 'Ñuñoa', 'La Reina',
+    'Macul', 'Peñalolén', 'La Florida', 'Puente Alto', 'San Bernardo',
+    'Maipú', 'Cerrillos', 'Quilicura', 'Recoleta', 'Independencia', 'Conchalí',
+    'Renca', 'Quinta Normal', 'Lo Prado', 'Pudahuel', 'Cerro Navia', 'Lo Espejo',
+    'Pedro Aguirre Cerda', 'San Miguel', 'San Joaquín', 'La Granja', 'La Pintana',
+    'El Bosque', 'San Ramón', 'Lo Barnechea', 'Vitacura', 'Huechuraba', 'Colina',
+    'Lampa', 'Til Til', 'San José de Maipo', 'Pirque', 'Talagante'
+  ];
+
+  const tiposServicio = [
+    { value: 'instalacion', label: 'Instalación' },
+    { value: 'mantenimiento', label: 'Mantenimiento' },
+    { value: 'reparacion', label: 'Reparación' },
+    { value: 'asesoria', label: 'Asesoría' }
+  ];
+
+  const prioridades = [
+    { value: 'baja', label: 'Baja' },
+    { value: 'media', label: 'Media' },
+    { value: 'alta', label: 'Alta' }
+  ];
+
+  // Cargar cliente y sus solicitudes al montar
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+    const clienteActual = JSON.parse(localStorage.getItem('clienteActual') || 'null');
+    const isCliente = (userData?.rol === 'cliente') || !!clienteActual;
+
+    const c = clienteActual || (isCliente ? userData : null);
+    if (!c) return;
+
+    setCliente(c);
+    cargarSolicitudes(c.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const cargarSolicitudes = async (clienteId) => {
+    setError('');
+    try {
+      const data = await api.get(`/api/solicitudes/cliente/${clienteId}`);
+      setSolicitudes(data.solicitudes || []);
+    } catch (err) {
+      setError(err.message || 'No se pudieron cargar las solicitudes');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('clienteActual');
+    localStorage.removeItem('clienteLoggedIn');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    setCliente(null);
+    setSolicitudes([]);
+    setMostrarFormulario(false);
+    window.location.reload();
+  };
 
   const handleVerSolicitudes = () => {
     if (!cliente) {
