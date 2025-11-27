@@ -6,7 +6,7 @@ import { api } from '../utils/api.js';
 
 const Home = () => {
   const [cliente, setCliente] = useState(null);
-  const [, setSolicitudes] = useState([]);          // solo usamos el setter (evita warning)
+  const [solicitudes, setSolicitudes] = useState([]);
   const [nuevaSolicitud, setNuevaSolicitud] = useState({
     titulo: '',
     descripcion: '',
@@ -21,7 +21,7 @@ const Home = () => {
   const [mostrarSolicitudes, setMostrarSolicitudes] = useState(false);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [cargando, setCargando] = useState(false);
-  const [, setError] = useState('');                // solo usamos el setter (evita warning)
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const comunasRM = [
