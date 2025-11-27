@@ -61,13 +61,32 @@ const Home = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Recargar solicitudes al entrar a la vista
+  useEffect(() => {
+    if (cliente && mostrarSolicitudes) {
+      cargarSolicitudes(cliente.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mostrarSolicitudes]);
+
   const cargarSolicitudes = async (clienteId) => {
     setError('');
+    setCargando(true);
     try {
+      console.log('Cargando solicitudes para cliente:', clienteId);
       const data = await api.get(`/api/solicitudes/cliente/${clienteId}`);
-      setSolicitudes(data.solicitudes || []);
+      console.log('Respuesta solicitudes:', data);
+      if (data && Array.isArray(data.solicitudes)) {
+        setSolicitudes(data.solicitudes);
+      } else {
+        console.warn('Formato inesperado de solicitudes:', data);
+        setSolicitudes([]);
+      }
     } catch (err) {
+      console.error('Error cargando solicitudes:', err);
       setError(err.message || 'No se pudieron cargar las solicitudes');
+    } finally {
+      setCargando(false);
     }
   };
 
@@ -142,7 +161,19 @@ const Home = () => {
                   </button>
                 </div>
                 <div className="card-body p-0">
-                  {solicitudes.length === 0 ? (
+                  {error && (
+                    <div className="alert alert-danger m-3" role="alert">
+                      <i className="fas fa-exclamation-circle me-2"></i>{error}
+                    </div>
+                  )}
+                  {cargando ? (
+                    <div className="text-center p-5">
+                      <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Cargando...</span>
+                      </div>
+                      <p className="mt-2 text-muted">Cargando tus solicitudes...</p>
+                    </div>
+                  ) : solicitudes.length === 0 ? (
                     <div className="text-center p-5">
                       <i className="fas fa-folder-open fa-3x text-muted mb-3"></i>
                       <p className="text-muted">No tienes solicitudes registradas aún.</p>
@@ -163,27 +194,30 @@ const Home = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {solicitudes.map((sol) => (
-                            <tr key={sol.id}>
-                              <td>#{sol.id}</td>
-                              <td>{sol.titulo}</td>
-                              <td>
-                                <span className="badge bg-light text-dark border">
-                                  {tiposServicio.find(t => t.value === sol.tipo_servicio)?.label || sol.tipo_servicio}
-                                </span>
-                              </td>
-                              <td>{new Date(sol.fecha_creacion).toLocaleDateString()}</td>
-                              <td>
-                                <span className={`badge ${sol.estado === 'pendiente' ? 'bg-warning text-dark' :
-                                  sol.estado === 'en_proceso' ? 'bg-info text-white' :
-                                    sol.estado === 'completada' ? 'bg-success' :
-                                      'bg-secondary'
-                                  }`}>
-                                  {sol.estado.toUpperCase().replace('_', ' ')}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
+                          {solicitudes.map((sol) => {
+                            const estado = sol.estado || sol.estado_actual || 'pendiente';
+                            return (
+                              <tr key={sol.id}>
+                                <td>#{sol.id}</td>
+                                <td>{sol.titulo}</td>
+                                <td>
+                                  <span className="badge bg-light text-dark border">
+                                    {tiposServicio.find(t => t.value === sol.tipo_servicio)?.label || sol.tipo_servicio}
+                                  </span>
+                                </td>
+                                <td>{new Date(sol.fecha_creacion).toLocaleDateString()}</td>
+                                <td>
+                                  <span className={`badge ${estado === 'pendiente' ? 'bg-warning text-dark' :
+                                    estado === 'en_proceso' || estado === 'en_progreso' ? 'bg-info text-white' :
+                                      estado === 'completada' ? 'bg-success' :
+                                        'bg-secondary'
+                                    }`}>
+                                    {estado.toUpperCase().replace('_', ' ')}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
