@@ -4,7 +4,9 @@
 // Ej: REACT_APP_API_URL=http://localhost:5000
 // Fallback por defecto → backend en Render
 const RAW =
-  process.env.REACT_APP_API_URL || 'https://infoser-backend.onrender.com';
+  process.env.NODE_ENV === 'production'
+    ? 'https://infoser-backend.onrender.com'
+    : process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 // normaliza: sin slash final
 const API_BASE = RAW.replace(/\/$/, '');

@@ -2,11 +2,13 @@
 // Helper fetch centralizado: fuerza BASE_URL y normaliza /api
 
 const API_URL =
-  (typeof process !== 'undefined' && process.env.REACT_APP_API_URL) ||
-  (typeof import.meta !== 'undefined' &&
-    import.meta.env &&
-    import.meta.env.VITE_API_URL) ||
-  'https://infoser-backend.onrender.com';
+  process.env.NODE_ENV === 'production'
+    ? 'https://infoser-backend.onrender.com'
+    : (typeof process !== 'undefined' && process.env.REACT_APP_API_URL) ||
+    (typeof import.meta !== 'undefined' &&
+      import.meta.env &&
+      import.meta.env.VITE_API_URL) ||
+    'http://localhost:5000';
 
 /** Normaliza la ruta y asegura prefijo /api cuando corresponda */
 function normalizeUrl(path) {
@@ -76,8 +78,8 @@ async function raw(path, options = {}) {
     fetchOpts.body = isFormData
       ? bodyIn
       : typeof bodyIn === 'object'
-      ? JSON.stringify(bodyIn)
-      : bodyIn;
+        ? JSON.stringify(bodyIn)
+        : bodyIn;
   }
 
   const res = await fetch(url, fetchOpts);
