@@ -1,7 +1,7 @@
 // src/pages/adminModeloPredictivo.js
 import React, { useMemo, useState } from 'react';
 import '../styles/admin.css';
-import { postForecast } from '../api/ml';
+import { postForecast, fetchRawData } from '../api/ml';
 
 // Paleta simple alineada al look INFOSER (azules/grises)
 const theme = {
@@ -23,8 +23,8 @@ const iso = (d) => d.toISOString().slice(0, 10);
 const initialRows = [
   { id: uid(), date: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 4)), comuna: 'santiago', tipo_servicio: 'instalacion', count: 12 },
   { id: uid(), date: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 3)), comuna: 'santiago', tipo_servicio: 'instalacion', count: 9 },
-  { id: uid(), date: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2)), comuna: 'maipu',    tipo_servicio: 'reparacion',  count: 5 },
-  { id: uid(), date: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)), comuna: 'maipu',    tipo_servicio: 'reparacion',  count: 7 },
+  { id: uid(), date: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2)), comuna: 'maipu', tipo_servicio: 'reparacion', count: 5 },
+  { id: uid(), date: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)), comuna: 'maipu', tipo_servicio: 'reparacion', count: 7 },
 ];
 
 export default function AdminModeloPredictivo() {
@@ -53,6 +53,57 @@ export default function AdminModeloPredictivo() {
     setPairs([]);
     setError('');
     setTouched(false);
+  };
+
+  const loadRealData = async () => {
+    if (!window.confirm('¿Cargar historial real de la base de datos? Esto reemplazará la tabla actual.')) return;
+
+    setLoading(true);
+    setError('');
+    try {
+      const { rows: rawRows } = await fetchRawData('90-dias'); // Traer últimos 90 días
+
+      if (!rawRows || rawRows.length === 0) {
+        alert('No se encontraron solicitudes en los últimos 90 días.');
+        setLoading(false);
+        return;
+      }
+
+      // Agrupar por (fecha, comuna, tipo)
+      const groups = {};
+
+      for (const r of rawRows) {
+        // r.fecha viene como string ISO o Date
+        const d = new Date(r.fecha);
+        const dateStr = iso(d);
+        const comuna = (r.comuna || '').toLowerCase().trim();
+        const tipo = (r.tipo_servicio || '').toLowerCase().trim();
+
+        const key = `${dateStr}|${comuna}|${tipo}`;
+
+        if (!groups[key]) {
+          groups[key] = { date: dateStr, comuna, tipo_servicio: tipo, count: 0 };
+        }
+        groups[key].count += 1;
+      }
+
+      // Convertir a array para la tabla
+      const newRows = Object.values(groups).map(g => ({
+        id: uid(),
+        ...g
+      })).sort((a, b) => a.date.localeCompare(b.date));
+
+      setRows(newRows);
+      setDaily([]);
+      setPairs([]);
+      setTouched(false);
+
+    } catch (err) {
+      console.error(err);
+      setError('Error cargando datos reales: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateRow = (id, field, value) => {
@@ -115,10 +166,10 @@ export default function AdminModeloPredictivo() {
 
       const pairData = Array.isArray(data?.pair_forecast)
         ? data.pair_forecast.map((p) => ({
-            comuna: p?.comuna ?? '',
-            tipo_servicio: p?.tipo_servicio ?? '',
-            next_days: Array.isArray(p?.next_days) ? p.next_days : [],
-          }))
+          comuna: p?.comuna ?? '',
+          tipo_servicio: p?.tipo_servicio ?? '',
+          next_days: Array.isArray(p?.next_days) ? p.next_days : [],
+        }))
         : [];
 
       setDaily(dailyData);
@@ -169,6 +220,18 @@ export default function AdminModeloPredictivo() {
               onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
             />
             <div style={{ flex: 1 }} />
+
+            <button
+              type="button"
+              onClick={loadRealData}
+              className="logout-btn"
+              style={{ background: '#198754' }} // Verde éxito
+              disabled={loading}
+            >
+              <i className="fas fa-database me-2"></i>
+              Cargar Datos Reales
+            </button>
+
             <button
               type="button"
               onClick={addRow}

@@ -71,4 +71,31 @@ export async function postForecast(body) {
   return resp.json();
 }
 
-export default { postForecast };
+/**
+ * Obtiene datos crudos de solicitudes para llenar la tabla de historial.
+ * GET /api/metricas/raw-solicitudes
+ * @param {string} rango // '7-dias' | '30-dias' | '90-dias' | 'este-año'
+ */
+export async function fetchRawData(rango = '30-dias') {
+  const token = getToken();
+  const params = new URLSearchParams({ rango });
+
+  const resp = await fetch(`${API}/metricas/raw-solicitudes?${params}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!resp.ok) {
+    const err = new Error(`HTTP ${resp.status}`);
+    err.status = resp.status;
+    throw err;
+  }
+
+  // { rows: [...] }
+  return resp.json();
+}
+
+export default { postForecast, fetchRawData };

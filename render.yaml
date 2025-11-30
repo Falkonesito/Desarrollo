@@ -9,12 +9,10 @@ services:
     plan: free
     rootDir: ml-service
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port 8001
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
-      - key: PORT
-        value: 8001
 
   # --------------------------------------------------------------------------------
   # 2. BACKEND (Node.js)
