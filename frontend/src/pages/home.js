@@ -233,11 +233,7 @@ const Home = () => {
 
 
 
-=======
-    }
-  };
 
->>>>>>> 3ca02d7fa7a2fe33fd2a0005f894dc921738a55c
   const handleSolicitudChange = (e) => {
     const { name, value } = e.target;
     setNuevaSolicitud((prev) => ({ ...prev, [name]: value }));
@@ -641,16 +637,24 @@ const Home = () => {
                 </a>
               </div>
             </div>
-            <div className="col-lg-6 text-center text-white">
-              <i className="fas fa-shield-alt" style={{ fontSize: 140, opacity: .85 }}></i>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="bg-dark text-white py-4 mt-auto">
+        <div className="container">
+          <div className="row align-items-center">
+            <div className="col-lg-6 text-center text-lg-start">
               <small>© 2025 Todos los derechos reservados</small>
             </div>
-            <div className="text-end">
+            <div className="col-lg-6 text-center text-lg-end">
               <div><i className="fas fa-envelope me-2"></i>infoserepspa@gmail.com</div>
               <div><i className="fas fa-phone me-2"></i>+56 9 7719 6032</div>
             </div>
           </div>
-        </footer>
+        </div>
+      </footer>
     </div>
   );
 };
