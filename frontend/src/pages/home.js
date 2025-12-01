@@ -552,7 +552,7 @@ const Home = () => {
   // ======= VISTA HOME NORMAL =======
   return (
     <div className="home-page">
-      <nav id="inicio" className="navbar navbar-expand-lg navbar-dark bg-dark">
+      <nav id="inicio" className="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div className="container">
           <Link className="navbar-brand" to="/">
             <i className="fas fa-shield-alt me-2"></i>
@@ -564,8 +564,8 @@ const Home = () => {
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav ms-auto align-items-center">
               <li className="nav-item"><a className="nav-link" href="#inicio">Inicio</a></li>
-              <li className="nav-item"><a className="nav-link" href="#why-choose-us">Servicios</a></li>
-              <li className="nav-item"><a className="nav-link" href="#proceso">Proceso</a></li>
+              <li className="nav-item"><a className="nav-link" href="#why-choose-us">Nosotros</a></li>
+              <li className="nav-item"><a className="nav-link" href="#servicios">Servicios</a></li>
               <li className="nav-item"><a className="nav-link" href="#contacto">Contacto</a></li>
 
               {!cliente ? (
@@ -637,20 +637,209 @@ const Home = () => {
                 </a>
               </div>
             </div>
+            <div className="col-lg-6 d-none d-lg-block text-center">
+              <i className="fas fa-shield-alt" style={{ fontSize: '15rem', color: 'rgba(255,255,255,0.1)' }}></i>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* WHY CHOOSE US (Excellence) */}
+      <section id="why-choose-us" className="why-choose-us-section">
+        <div className="container">
+          <div className="row align-items-center">
+            <div className="col-lg-6 mb-5 mb-lg-0">
+              <h2 className="section-title-alt mb-4">INFOSER: Seguridad con Excelencia</h2>
+              <p className="lead mb-5">Elegirnos es optar por la tranquilidad operativa. Ofrecemos soluciones de seguridad y TI con un compromiso de calidad, soporte continuo y la tecnología más avanzada.</p>
+
+              <div className="advantages-grid">
+                <div className="advantage-item d-flex mb-4">
+                  <div className="advantage-icon text-accent-blue me-3"><i className="fas fa-certificate"></i></div>
+                  <div>
+                    <h5 className="text-dark-blue">Certificación y Trayectoria</h5>
+                    <p>Años de experiencia con proyectos de alto impacto y resultados garantizados.</p>
+                  </div>
+                </div>
+
+                <div className="advantage-item d-flex mb-4">
+                  <div className="advantage-icon text-accent-blue me-3"><i className="fas fa-microchip"></i></div>
+                  <div>
+                    <h5 className="text-dark-blue">Innovación Tecnológica</h5>
+                    <p>Implementamos sistemas de seguridad con equipos y software de última generación.</p>
+                  </div>
+                </div>
+
+                <div className="advantage-item d-flex mb-4">
+                  <div className="advantage-icon text-accent-blue me-3"><i className="fas fa-headset"></i></div>
+                  <div>
+                    <h5 className="text-dark-blue">Asistencia Proactiva 24/7</h5>
+                    <p>Soporte técnico inmediato y acompañamiento estratégico post-instalación.</p>
+                  </div>
+                </div>
+
+                <div className="advantage-item d-flex mb-4">
+                  <div className="advantage-icon text-accent-blue me-3"><i className="fas fa-user-shield"></i></div>
+                  <div>
+                    <h5 className="text-dark-blue">Foco en el Cliente</h5>
+                    <p>Soluciones personalizadas que se ajustan a su presupuesto y necesidades únicas.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-lg-6 text-center">
+              <img src="https://images.unsplash.com/photo-1557597774-9d273605dfa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Cámaras de Seguridad" className="img-fluid why-choose-us-image" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ABOUT / CLIENTS */}
+      <section className="py-5 bg-light">
+        <div className="container">
+          <div className="row">
+            <div className="col-lg-6 about-main-content mb-5 mb-lg-0">
+              <h2 className="section-title-alt text-start mb-4">Nuestra Trayectoria y Compromiso</h2>
+              <p className="lead">INFOSER & EP SPA: Especialistas en consultoría y gestión de instalaciones informáticas.</p>
+              <p className="text-muted mb-4">
+                Constituidos legalmente como SOCIEDAD POR ACCIONES desde el 03 de Agosto del 2020, operamos bajo el régimen de sociedades mercantiles y comerciales del país.
+              </p>
+              <p className="text-muted mb-4">
+                Nuestro principal compromiso es acompañarte en cada paso, diseñando soluciones efectivas y personalizadas que aporten valor real, ayudándote a alcanzar tus objetivos de crecimiento y seguridad.
+              </p>
+
+              <div className="mt-4">
+                <button className="btn btn-outline-primary-alt" onClick={handleSolicitarServicio}>
+                  <i className="fas fa-headset me-2"></i>Solicita una Asesoría Gratuita
+                </button>
+              </div>
+            </div>
+
+            <div className="col-lg-6">
+              <div className="proyectos-card-refined bg-white p-4 rounded shadow-sm">
+                <h4 className="card-title-alt mb-4"><i className="fas fa-star me-2"></i>Proyectos y Clientes Destacados</h4>
+                <p className="mb-3">Experiencia comprobada en sectores clave:</p>
+
+                <h5 className="client-group-title"><i className="fas fa-building me-2"></i>Sector Público e Infraestructura</h5>
+                <ul className="list-unstyled client-list-refined mb-4">
+                  <li><i className="fas fa-map-marker-alt me-2"></i>Municipalidad de Melipilla (Mantención CCTV interna)</li>
+                  <li><i className="fas fa-map-marker-alt me-2"></i>Hospital de Melipilla</li>
+                  <li><i className="fas fa-map-marker-alt me-2"></i>Variante Autopista Melipilla</li>
+                </ul>
+
+                <h5 className="client-group-title"><i className="fas fa-home me-2"></i>Comunidades y Retail</h5>
+                <ul className="list-unstyled client-list-refined">
+                  <li><i className="fas fa-map-marker-alt me-2"></i>Postulaciones FOCMUS Metropolitano</li>
+                  <li><i className="fas fa-map-marker-alt me-2"></i>Comités de población de Melipilla (Lomas de Manso, Cantillana, etc.)</li>
+                  <li><i className="fas fa-map-marker-alt me-2"></i>Certificación de Puntos de Red (Fashionpark Melipilla, Puente Alto, La Florida.)</li>
+                </ul>
+
+                <p className="text-end text-muted mt-3"><small>Más de 4 años aportando soluciones en la Región Metropolitana.</small></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SERVICES CORE */}
+      <section id="servicios" className="services-infoser-core">
+        <div className="container">
+          <div className="text-center mb-5">
+            <h2 className="section-title-core">Nuestras Especialidades</h2>
+            <p className="text-muted lead">Soluciones integrales para cada necesidad de seguridad</p>
+          </div>
+
+          <div className="row g-4">
+            <div className="col-md-6 col-lg-3">
+              <div className="service-card-core h-100">
+                <div className="service-icon-core bg-primary-blue-light text-primary-blue-strong">
+                  <i className="fas fa-video"></i>
+                </div>
+                <h4 className="card-title-core">CCTV y Videovigilancia</h4>
+                <ul className="list-unstyled service-list-core">
+                  <li><i className="fas fa-check-circle me-2"></i>Cámaras IP y Análogas</li>
+                  <li><i className="fas fa-check-circle me-2"></i>Monitoreo Remoto</li>
+                  <li><i className="fas fa-check-circle me-2"></i>Analítica de Video</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="col-md-6 col-lg-3">
+              <div className="service-card-core h-100">
+                <div className="service-icon-core bg-accent-blue-light text-accent-blue-strong">
+                  <i className="fas fa-network-wired"></i>
+                </div>
+                <h4 className="card-title-core">Redes y Conectividad</h4>
+                <ul className="list-unstyled service-list-core">
+                  <li><i className="fas fa-check-circle me-2"></i>Cableado Estructurado</li>
+                  <li><i className="fas fa-check-circle me-2"></i>Enlaces Inalámbricos</li>
+                  <li><i className="fas fa-check-circle me-2"></i>Certificación de Puntos</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="col-md-6 col-lg-3">
+              <div className="service-card-core h-100">
+                <div className="service-icon-core bg-secondary-blue-light text-secondary-blue-strong">
+                  <i className="fas fa-lock"></i>
+                </div>
+                <h4 className="card-title-core">Control de Acceso</h4>
+                <ul className="list-unstyled service-list-core">
+                  <li><i className="fas fa-check-circle me-2"></i>Biometría y RFID</li>
+                  <li><i className="fas fa-check-circle me-2"></i>Portones Automáticos</li>
+                  <li><i className="fas fa-check-circle me-2"></i>Gestión de Visitas</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="col-md-6 col-lg-3">
+              <div className="service-card-core h-100">
+                <div className="service-icon-core bg-primary-blue-light text-primary-blue-strong">
+                  <i className="fas fa-solar-panel"></i>
+                </div>
+                <h4 className="card-title-core">Energía y Respaldo</h4>
+                <ul className="list-unstyled service-list-core">
+                  <li><i className="fas fa-check-circle me-2"></i>UPS y Respaldo</li>
+                  <li><i className="fas fa-check-circle me-2"></i>Energía Solar</li>
+                  <li><i className="fas fa-check-circle me-2"></i>Iluminación LED</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-dark text-white py-4 mt-auto">
+      <footer id="contacto" className="bg-dark text-white py-5 mt-auto">
         <div className="container">
-          <div className="row align-items-center">
-            <div className="col-lg-6 text-center text-lg-start">
-              <small>© 2025 Todos los derechos reservados</small>
+          <div className="row">
+            <div className="col-lg-4 mb-4 mb-lg-0">
+              <h5 className="mb-3"><i className="fas fa-shield-alt me-2"></i>INFOSER & EP SPA</h5>
+              <p className="text-white-50 small">
+                Expertos en seguridad electrónica y soluciones TI. Protegemos lo que más te importa con tecnología de punta y servicio profesional.
+              </p>
             </div>
-            <div className="col-lg-6 text-center text-lg-end">
-              <div><i className="fas fa-envelope me-2"></i>infoserepspa@gmail.com</div>
-              <div><i className="fas fa-phone me-2"></i>+56 9 7719 6032</div>
+            <div className="col-lg-4 mb-4 mb-lg-0 text-center">
+              <h6 className="text-uppercase mb-3 fw-bold">Enlaces Rápidos</h6>
+              <ul className="list-unstyled">
+                <li><a href="#inicio" className="text-white-50 text-decoration-none">Inicio</a></li>
+                <li><a href="#why-choose-us" className="text-white-50 text-decoration-none">Nosotros</a></li>
+                <li><a href="#servicios" className="text-white-50 text-decoration-none">Servicios</a></li>
+              </ul>
+            </div>
+            <div className="col-lg-4 text-lg-end">
+              <h6 className="text-uppercase mb-3 fw-bold">Contacto</h6>
+              <div className="mb-2"><i className="fas fa-envelope me-2"></i>infoserepspa@gmail.com</div>
+              <div className="mb-2"><i className="fas fa-phone me-2"></i>+56 9 7719 6032</div>
+              <div className="text-white-50 small mt-3">Región Metropolitana, Chile</div>
+            </div>
+          </div>
+          <hr className="my-4 border-secondary" />
+          <div className="row align-items-center">
+            <div className="col-md-6 text-center text-md-start">
+              <small className="text-white-50">© 2025 INFOSER & EP SPA. Todos los derechos reservados.</small>
+            </div>
+            <div className="col-md-6 text-center text-md-end">
+              {/* Social icons could go here */}
             </div>
           </div>
         </div>

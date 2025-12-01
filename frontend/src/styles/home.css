@@ -565,6 +565,200 @@
     transition: background-color 0.2s;
 }
 
+.btn-accent-blue-outline {
+    color: var(--accent-blue);
+    background-color: transparent;
+    border: 2px solid var(--accent-blue);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-accent-blue-outline:hover {
+    color: var(--white);
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.why-choose-us-section {
+    background-color: var(--white);
+    padding: 6rem 0;
+}
+
+.why-choose-us-section .section-title-alt {
+    color: var(--primary-blue);
+    font-size: 2.2rem;
+    font-weight: 800;
+}
+
+.text-dark-blue {
+    color: var(--primary-blue);
+}
+
+.why-choose-us-section .lead {
+    color: var(--dark-gray);
+    font-size: 1.15rem;
+    margin-bottom: 3rem;
+}
+
+.advantages-grid .advantage-item {
+    margin-bottom: 1.5rem;
+}
+
+.advantage-icon {
+    font-size: 2.5rem;
+    min-width: 60px;
+    text-align: center;
+}
+
+.advantage-item h5 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.advantage-item p {
+    font-size: 0.9rem;
+    color: var(--medium-gray);
+}
+
+.why-choose-us-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+}
+
+.why-choose-us-image:hover {
+    transform: scale(1.02);
+}
+
+.text-primary-blue {
+    color: var(--primary-blue);
+}
+
+.text-accent-blue {
+    color: var(--accent-blue);
+}
+
+.text-secondary-blue {
+    color: var(--secondary-blue);
+}
+
+.text-success {
+    color: #28a745;
+}
+
+@media (max-width: 991px) {
+    .why-choose-us-section .section-title-alt {
+        text-align: center;
+    }
+
+    .why-choose-us-section .section-title-alt::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .why-choose-us-section .lead {
+        text-align: center;
+    }
+
+    .advantages-grid {
+        text-align: center;
+    }
+
+    .advantage-item {
+        justify-content: center;
+    }
+}
+
+/* ===== ESTILOS SECCIÓN TESTIMONIOS (CON CARRUSEL Y TAMAÑO REDUCIDO) ===== */
+
+.testimonials-section {
+    background-color: var(--light-gray);
+    padding: 5rem 0;
+    overflow: hidden;
+}
+
+.section-title {
+    color: var(--primary-blue);
+    font-weight: 700;
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+
+.testimonial-card {
+    background: var(--white);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-left: 5px solid var(--accent-blue);
+    padding: 15px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.testimonial-card:hover {
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.testimonial-icon {
+    font-size: 1.8rem;
+    color: var(--secondary-blue);
+}
+
+.testimonial-quote {
+    font-style: italic;
+    color: var(--medium-gray);
+    font-size: 1rem;
+    line-height: 1.6;
+    flex-grow: 1;
+}
+
+.testimonial-client {
+    color: var(--primary-blue);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-top: 15px;
+}
+
+.slick-dots {
+    bottom: -40px !important;
+}
+
+.slick-dots li button:before {
+    font-size: 12px !important;
+    color: var(--primary-blue) !important;
+    opacity: 0.5 !important;
+}
+
+.slick-dots li.slick-active button:before {
+    color: var(--accent-blue) !important;
+    opacity: 1 !important;
+}
+
+
+.auth-page-container {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 2rem 0;
+}
+
+.btn-primary {
+    background-color: var(--accent-blue) !important;
+    border-color: var(--accent-blue) !important;
+    transition: background-color 0.2s;
+}
+
 .btn-primary:hover {
     background-color: var(--secondary-blue) !important;
     border-color: var(--secondary-blue) !important;
@@ -576,7 +770,7 @@
     }
 }
 
->>>>>>>3ca02d7fa7a2fe33fd2a0005f894dc921738a55c @keyframes shimmer {
+@keyframes shimmer {
     100% {
         transform: translateX(100%);
     }
