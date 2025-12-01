@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import '../../styles/auth.css';
-import { api } from '../../utils/api.js'; // 👈 usa el helper real
-
+import { api } from '../../utils/api.js';
 const LoginClientes = () => {
   const [credenciales, setCredenciales] = useState({ email: '', password: '' });
   const [cargando, setCargando] = useState(false);
@@ -116,7 +114,7 @@ const LoginClientes = () => {
                 disabled={cargando}
               />
               <div className="forgot-password-client">
-                <a href="#recuperar">¿Olvidó su contraseña?</a>
+                <Link to="/forgot-password">¿Olvidó su contraseña?</Link>
               </div>
             </div>
 

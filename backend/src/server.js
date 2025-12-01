@@ -1,8 +1,8 @@
-// backend/src/server.js
-
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const { emitirToken } = require('./utils/jwt');
@@ -48,7 +48,57 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-// ❗ OJO: NO hay ninguna ruta tipo app.options('*', ...) ni app.all('*', ...).
+
+// CONFIGURACIÓN DE NODEMAILER (GMAIL)
+const transporter = nodemailer.createTransport({
+  service: process.env.EMAIL_SERVICE || 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+const sendResetEmail = async (to, nombre, resetUrl) => {
+  const emailSubject = "Solicitud de Restablecimiento de Contraseña - INFOSER & EP SPA";
+  const fromName = process.env.EMAIL_FROM_NAME || "INFOSER & EP SPA";
+
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+      <h2 style="color: #1a365d;">Restablecimiento de Contraseña</h2>
+      <p>Estimado/a ${nombre},</p>
+      <p>Recibimos una solicitud reciente para restablecer la contraseña asociada a su cuenta en 
+      nuestros sistemas de INFOSER & EP SPA. </p>
+      <p>Para proteger la seguridad de su cuenta, hemos generado un enlace único y seguro que le permitirá 
+      establecer una nueva contraseña de inmediato.Para continuar con el proceso, haga clic en el botón de abajo.</p>
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="${resetUrl}" style="padding: 15px 30px; background-color: #1a365d; color: white; text-decoration: none; border-radius: 5px;">Restablecer Contraseña</a>
+      </p>
+      <p>Este enlace es válido solo por un período limitado de 1 hora. </p>
+      <p></p>
+      <p style="font-size: 18px; font-weight: bold; color: #1a365d; margin-bottom: 10px;">¿No solicitó esto?</p>
+      <p style="margin-top: 0;">Si usted no realizó esta solicitud o si cree que se trata de un error, puede ignorar este correo electrónico de manera segura. Su contraseña actual no se ha modificado y su cuenta permanece segura.</p>
+      <br>
+      <p style="font-size: 0.9em; color: #555; margin-top: 20px;">
+        Agradecemos su atención y cooperación.<br>
+        <br>
+        Saludos cordiales,<br>
+        <strong>El equipo de INFOSER & EP SPA</strong>
+      </p>
+    </div>
+  `;
+  try {
+    await transporter.sendMail({
+      from: `"${fromName}" <${process.env.EMAIL_USER}>`,
+      to: to,
+      subject: emailSubject,
+      html: emailHtml,
+    });
+    return true;
+  } catch (error) {
+    console.error("Error enviando correo:", error);
+    return false;
+  }
+};
 app.use(express.json());
 
 // -------------------------------------------------------------------
@@ -273,10 +323,75 @@ app.post('/api/auth/register', validarRegisterCliente, async (req, res) => {
   }
 });
 
+
 // -------------------------------------------------------------------
 // SOLICITUDES
 // -------------------------------------------------------------------
 
+// 1. SOLICITAR EMAIL
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const email = normEmail(req.body?.email);
+  if (!email) return res.status(400).json({ success: false, message: 'Email requerido' });
+
+  try {
+    // Buscar en Clientes
+    let userResult = await pool.query("SELECT id, email, nombre, 'cliente' as tipo FROM clientes WHERE email = $1 AND activo = true", [email]);
+
+    // Si no, buscar en Usuarios
+    if (userResult.rows.length === 0) {
+      userResult = await pool.query("SELECT id, email, nombre, 'usuario' as tipo FROM usuarios WHERE email = $1 AND activo = true", [email]);
+    }
+
+    if (userResult.rows.length === 0) {
+      return res.json({ success: true, message: 'Si el correo existe, se enviará un enlace.' });
+    }
+
+    const user = userResult.rows[0];
+    const tabla = user.tipo === 'cliente' ? 'clientes' : 'usuarios';
+    const token = crypto.randomBytes(32).toString('hex');
+
+    // Guardar token (expira en 1 hora)
+    await pool.query(`UPDATE ${tabla} SET reset_token = $1, reset_token_expires = CURRENT_TIMESTAMP + INTERVAL '1 hour' WHERE id = $2`, [token, user.id]);
+
+    // Enviar email
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+    await sendResetEmail(user.email, user.nombre, resetUrl);
+
+    res.json({ success: true, message: 'Correo enviado correctamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Error interno' });
+  }
+});
+
+// 2. CAMBIAR CONTRASEÑA
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  if (!token || !newPassword) return res.status(400).json({ success: false, message: 'Faltan datos' });
+
+  try {
+    // Validar Token en Clientes
+    let userResult = await pool.query("SELECT id, 'cliente' as tipo FROM clientes WHERE reset_token = $1 AND reset_token_expires > CURRENT_TIMESTAMP", [token]);
+
+    // Si no, en Usuarios
+    if (userResult.rows.length === 0) {
+      userResult = await pool.query("SELECT id, 'usuario' as tipo FROM usuarios WHERE reset_token = $1 AND reset_token_expires > CURRENT_TIMESTAMP", [token]);
+    }
+
+    if (userResult.rows.length === 0) return res.status(400).json({ success: false, message: 'Token inválido o expirado' });
+
+    const user = userResult.rows[0];
+    const tabla = user.tipo === 'cliente' ? 'clientes' : 'usuarios';
+    const hash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+    await pool.query(`UPDATE ${tabla} SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2`, [hash, user.id]);
+
+    res.json({ success: true, message: 'Contraseña actualizada' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Error interno' });
+  }
+});
 // Helper: nombre real de la columna de estado
 async function getEstadoColName(poolConn) {
   const q = `
@@ -1089,8 +1204,8 @@ app.get(
       const { rango = '30-dias' } = req.query;
       const days =
         rango === '7-dias' ? 7 :
-        rango === '90-dias' ? 90 :
-        rango === 'este-año' ? 365 : 30;
+          rango === '90-dias' ? 90 :
+            rango === 'este-año' ? 365 : 30;
 
       const sql = `
         SELECT

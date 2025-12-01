@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 // ojo con la ruta: estás en src/components/auth y tu helper está en src/components/utils/api.js
-import { api } from '../utils/api';
+import { api } from '../../utils/api.js';
 
 export default function LoginAdmin() {
   const navigate = useNavigate();

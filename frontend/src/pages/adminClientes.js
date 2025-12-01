@@ -217,11 +217,10 @@ const AdminClientes = () => {
                           <td>{fechaRegistro}</td>
                           <td>
                             <span
-                              className={`badge ${
-                                solicitudesActivas > 0
+                              className={`badge ${solicitudesActivas > 0
                                   ? 'active'
                                   : 'inactive'
-                              }`}
+                                }`}
                             >
                               {solicitudesActivas}
                             </span>

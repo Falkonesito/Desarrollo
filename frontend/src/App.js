@@ -12,7 +12,11 @@ import AdminTecnicos from './pages/adminTecnicos';
 import AdminMetricas from './pages/adminMetricas';
 import TecnicoPanel from './pages/tecnicoPanel';
 import AdminCrearUsuario from './pages/adminCrearUsuario';
-import AdminModeloPredictivo from './pages/adminModeloPredictivo'; // 👈 NUEVO
+import AdminModeloPredictivo from './pages/adminModeloPredictivo';
+
+// IMPORTA LAS PÁGINAS DE CONTRASEÑA
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // ---- Guard genérico de rutas protegidas ----
 function RequireAuth({ roles, children }) {
@@ -40,6 +44,9 @@ export default function App() {
         <Route path="/login" element={<LoginClientes />} />
         <Route path="/registro" element={<RegisterClientes />} />
 
+        {/* RUTAS DE RECUPERACIÓN (Públicas) */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         {/* ADMIN */}
         <Route
           path="/admin/menu"

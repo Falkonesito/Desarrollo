@@ -233,6 +233,11 @@ const Home = () => {
 
 
 
+=======
+    }
+  };
+
+>>>>>>> 3ca02d7fa7a2fe33fd2a0005f894dc921738a55c
   const handleSolicitudChange = (e) => {
     const { name, value } = e.target;
     setNuevaSolicitud((prev) => ({ ...prev, [name]: value }));
@@ -285,6 +290,27 @@ const Home = () => {
       comentarios_finales: ''
     });
     setMostrarFormulario(false);
+  };
+  const serviciosData = [
+    { id: 1, title: 'Instalación CCTV', description: 'Sistemas de cámaras de vigilancia de alta definición para tu hogar o negocio.', icon: 'fas fa-camera' },
+    { id: 2, title: 'Sistemas de Alarmas', description: 'Alarmas inteligentes cableadas e inalámbricas con monitoreo 24/7.', icon: 'fas fa-bell' },
+    { id: 3, title: 'Control de Acceso', description: 'Cerraduras biométricas, tarjetas RFID y sistemas de control para edificios.', icon: 'fas fa-fingerprint' },
+    { id: 4, title: 'Mantenimiento y Soporte', description: 'Planes de mantenimiento preventivo y correctivo con SLA garantizado.', icon: 'fas fa-tools' }
+  ];
+
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1, // MOSTRAR TESTIMONIOS A LA VEZ
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 5000,
+    arrows: false,
+    responsive: [
+      { breakpoint: 992, settings: { slidesToShow: 2, slidesToScroll: 1 } },
+      { breakpoint: 768, settings: { slidesToShow: 1, slidesToScroll: 1 } }
+    ]
   };
 
   // ======= VISTA FORMULARIO (cuando el cliente decide crear una solicitud) =======
@@ -472,9 +498,9 @@ const Home = () => {
                           ))}
                         </select>
                         <div className="form-text">
-                          {nuevaSolicitud.prioridad === 'alta' && '⚠️ Servicio urgente - Respuesta en 4 días'}
-                          {nuevaSolicitud.prioridad === 'media' && '⏱️ Servicio estándar - Respuesta en 1-2 semanas'}
-                          {nuevaSolicitud.prioridad === 'baja' && '📅 Servicio programado - Respuesta en 1 mes'}
+                          {nuevaSolicitud.prioridad === 'alta' && '⚠️ Servicio urgente - Respuesta inmediata'}
+                          {nuevaSolicitud.prioridad === 'media' && '⏱️ Servicio estándar - Respuesta en 24-48 horas'}
+                          {nuevaSolicitud.prioridad === 'baja' && '📅 Servicio programado - Respuesta en 3-5 días'}
                         </div>
                       </div>
                     </div>
@@ -542,7 +568,7 @@ const Home = () => {
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav ms-auto align-items-center">
               <li className="nav-item"><a className="nav-link" href="#inicio">Inicio</a></li>
-              <li className="nav-item"><a className="nav-link" href="#servicios">Servicios</a></li>
+              <li className="nav-item"><a className="nav-link" href="#why-choose-us">Servicios</a></li>
               <li className="nav-item"><a className="nav-link" href="#proceso">Proceso</a></li>
               <li className="nav-item"><a className="nav-link" href="#contacto">Contacto</a></li>
 
@@ -610,108 +636,21 @@ const Home = () => {
                   <i className="fas fa-tools me-2"></i>
                   {cliente ? 'Nueva Solicitud' : 'Solicitar Servicio'}
                 </button>
-                <a href="#servicios" className="btn btn-outline-light btn-lg">
+                <a href="#why-choose-us" className="btn btn-outline-light btn-lg">
                   <i className="fas fa-info-circle me-2"></i>Más Información
                 </a>
               </div>
             </div>
             <div className="col-lg-6 text-center text-white">
               <i className="fas fa-shield-alt" style={{ fontSize: 140, opacity: .85 }}></i>
+              <small>© 2025 Todos los derechos reservados</small>
+            </div>
+            <div className="text-end">
+              <div><i className="fas fa-envelope me-2"></i>infoserepspa@gmail.com</div>
+              <div><i className="fas fa-phone me-2"></i>+56 9 7719 6032</div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* SERVICIOS */}
-      <section id="servicios" className="py-5 bg-light">
-        <div className="container">
-          <div className="text-center mb-5">
-            <h2 className="section-title">Nuestros Servicios</h2>
-            <p className="section-subtitle">Soluciones de seguridad adaptadas a tus necesidades</p>
-          </div>
-
-          <div className="row">
-            {/* Instalación de Cámaras */}
-            <div className="col-md-6 mb-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body">
-                  <h4 className="mb-3">
-                    <i className="fas fa-camera me-2"></i>
-                    Instalación de Cámaras de Seguridad
-                  </h4>
-                  <p className="text-muted">
-                    Diseño e implementación completa del sistema, desde el levantamiento en terreno hasta la
-                    puesta en marcha y capacitación básica.
-                  </p>
-                  <ul className="mb-3">
-                    <li>Planificación de cobertura y ángulos ciegos (croquis + recomendaciones).</li>
-                    <li>Cámaras <strong>ColorVu</strong> 24/7 a color y <strong>PTZ</strong> con zoom óptico hasta 25×.</li>
-                    <li>Canalizado, cableado estructurado y rotulación de puntos.</li>
-                    <li>Grabadores <strong>DVR/NVR</strong>, discos de vigilancia y dimensionamiento de almacenamiento.</li>
-                    <li>Configuración de red, acceso remoto seguro (P2P/VPN), app móvil y perfiles de usuario.</li>
-                    <li>Entrega de documentación: claves iniciales, mapa de cámaras y ficha técnica.</li>
-                  </ul>
-                  <div className="small text-muted">
-                    Opcionales: analítica de video (detección de personas/vehículos), audio disuasivo,
-                    integración con alarmas y control de acceso.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Mantenimiento (preventivo y correctivo) */}
-            <div className="col-md-6 mb-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body">
-                  <h4 className="mb-3">
-                    <i className="fas fa-tools me-2"></i>
-                    Mantenimiento de Cámaras (Preventivo y Correctivo)
-                  </h4>
-                  <p className="text-muted">
-                    Mantén tu sistema operando al 100% con planes programados y soporte cuando algo falla.
-                  </p>
-
-                  <h6 className="mt-3">Preventivo (programado)</h6>
-                  <ul className="mb-3">
-                    <li>Limpieza de lentes y carcasas; revisión de sellos IP y soportes.</li>
-                    <li>Verificación de fuentes, POE, voltajes y conectores.</li>
-                    <li>Chequeo de ángulos, enfoque y perfil de imagen (día/noche).</li>
-                    <li>Actualización de firmware (cámaras/NVR) y respaldo de configuración.</li>
-                    <li>Pruebas de grabación, retención de video y salud de discos (S.M.A.R.T.).</li>
-                    <li>Informe técnico con hallazgos, evidencias y recomendaciones.</li>
-                  </ul>
-
-                  <h6>Correctivo (bajo demanda)</h6>
-                  <ul className="mb-3">
-                    <li>Diagnóstico en sitio y reemplazo de componentes defectuosos.</li>
-                    <li>Reconfiguración de red, puertos y usuarios; recuperación de acceso.</li>
-                    <li>Reubicación de cámaras y recalibración de detecciones.</li>
-                  </ul>
-
-                  <div className="small text-muted">
-                    Planes con <strong>SLA</strong> (tiempos de respuesta) y frecuencia: mensual, bimestral o trimestral.
-                    Atención 24/7 para clientes con plan activo.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer id="contacto" className="py-4 bg-dark text-white">
-        <div className="container d-flex justify-content-between">
-          <div>
-            <h5><i className="fas fa-shield-alt me-2"></i>INFOSER & EP SPA</h5>
-            <small>© 2024 Todos los derechos reservados</small>
-          </div>
-          <div className="text-end">
-            <div><i className="fas fa-envelope me-2"></i>infoserepspa@gmail.com</div>
-            <div><i className="fas fa-phone me-2"></i>+56 9 7719 6032</div>
-          </div>
-        </div>
-      </footer>
+        </footer>
     </div>
   );
 };
