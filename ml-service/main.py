@@ -43,6 +43,10 @@ app.add_middleware(
 def health():
     return {"status": "ok", "service": "forecast", "version": 2}
 
+@app.get("/")
+def root():
+    return {"message": "ML Service is running", "docs": "/docs"}
+
 @app.post("/forecast", response_model=ForecastResponse)
 def forecast(req: ForecastRequest):
     # Normalizamos claves a minúsculas y pasamos a tupla sencilla
