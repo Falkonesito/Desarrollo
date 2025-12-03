@@ -1,5 +1,6 @@
 // src/pages/adminModeloPredictivo.js
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/admin.css';
 import { postForecast, fetchRawData } from '../api/ml';
 
@@ -28,6 +29,7 @@ const initialRows = [
 ];
 
 export default function AdminModeloPredictivo() {
+  const navigate = useNavigate();
   const [horizon, setHorizon] = useState(14);
   const [rows, setRows] = useState(initialRows);
   const [loading, setLoading] = useState(false);
@@ -186,281 +188,347 @@ export default function AdminModeloPredictivo() {
     <div className="admin-menu-container" style={{ color: theme.text }}>
       <header className="admin-menu-header" style={{ borderBottom: `1px solid ${theme.border}` }}>
         <div className="header-content">
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span className="fas fa-chart-line" />
-            Pronóstico de demanda de servicios
-          </h1>
-          <p style={{ color: theme.muted, marginTop: 8 }}>
-            Ingresa el <strong>historial</strong> por <em>comuna</em> y <em>tipo de servicio</em>,
-            y define el <strong>horizonte</strong>. El modelo devolverá el total diario y la predicción por par.
-          </p>
+          <div className="header-left">
+            <button
+              className="btn-volver"
+              onClick={() => navigate('/admin/menu')}
+              style={{ marginRight: 16, background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: theme.text }}
+            >
+              <i className="fas fa-arrow-left me-2"></i>
+              Volver
+            </button>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, margin: 0 }}>
+              <i className="fas fa-brain"></i>
+              Pronóstico de Demanda
+            </h1>
+          </div>
+          <div className="admin-info">
+            <span>Administrador</span>
+            <button
+              className="logout-btn"
+              onClick={() => {
+                localStorage.clear();
+                window.location.href = '/';
+              }}
+              style={{ marginLeft: 16 }}
+            >
+              Cerrar Sesión
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="admin-menu-main" style={{ gap: 24 }}>
-        {/* Card del formulario */}
-        <div
-          className="menu-card"
-          style={{
-            background: theme.surface,
-            border: `1px solid ${theme.border}`,
-            boxShadow: '0 8px 24px rgba(2,6,23,0.06)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-            <label htmlFor="horizon"><strong>Horizonte (días)</strong></label>
-            <input
-              id="horizon"
-              type="number"
-              min={1}
-              max={30}
-              value={horizon}
-              onChange={(e) => setHorizon(e.target.value)}
-              style={{ width: 120 }}
-              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-            />
-            <div style={{ flex: 1 }} />
+      <div className="admin-menu-layout" style={{ display: 'flex', minHeight: 'calc(100vh - 70px)' }}>
+        <nav className="admin-menu-sidebar" style={{ width: 250, background: '#fff', borderRight: `1px solid ${theme.border}`, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/menu')}
+            style={{ padding: '12px 16px', borderRadius: 8, border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', color: theme.text }}
+          >
+            <i className="fas fa-home me-2"></i>
+            Menú Principal
+          </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/solicitudes')}
+            style={{ padding: '12px 16px', borderRadius: 8, border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', color: theme.text }}
+          >
+            <i className="fas fa-tools me-2"></i>
+            📋 Solicitudes
+          </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/clientes')}
+            style={{ padding: '12px 16px', borderRadius: 8, border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', color: theme.text }}
+          >
+            <i className="fas fa-users me-2"></i>
+            👥 Clientes
+          </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/tecnicos')}
+            style={{ padding: '12px 16px', borderRadius: 8, border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', color: theme.text }}
+          >
+            <i className="fas fa-user-cog me-2"></i>
+            👨‍💻 Técnicos
+          </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/metricas')}
+            style={{ padding: '12px 16px', borderRadius: 8, border: 'none', background: 'transparent', textAlign: 'left', cursor: 'pointer', color: theme.text }}
+          >
+            <i className="fas fa-chart-line me-2"></i>
+            📈 Métricas
+          </button>
+          <button
+            className="sidebar-btn active"
+            style={{ padding: '12px 16px', borderRadius: 8, border: 'none', background: '#e0f2fe', color: '#0284c7', textAlign: 'left', cursor: 'pointer', fontWeight: 600 }}
+          >
+            <i className="fas fa-brain me-2"></i>
+            🔮 Modelo Predictivo
+          </button>
+        </nav>
 
-            <button
-              type="button"
-              onClick={loadRealData}
-              className="logout-btn"
-              style={{ background: '#198754' }} // Verde éxito
-              disabled={loading}
-            >
-              <i className="fas fa-database me-2"></i>
-              Cargar Datos Reales
-            </button>
-
-            <button
-              type="button"
-              onClick={addRow}
-              className="logout-btn"
-              style={{ background: theme.primary }}
-            >
-              + Agregar fila
-            </button>
-            <button
-              type="button"
-              onClick={clearAll}
-              className="logout-btn"
-              style={{ background: '#adb5bd' }}
-            >
-              Limpiar
-            </button>
-            <button
-              type="button"
-              onClick={predict}
-              className="logout-btn"
-              style={{ background: theme.primaryDark }}
-              disabled={loading}
-            >
-              {loading ? 'Calculando…' : 'Predecir'}
-            </button>
+        <main className="admin-menu-content" style={{ flex: 1, padding: 24, background: '#f8fafc' }}>
+          <div style={{ marginBottom: 24 }}>
+            <p style={{ color: theme.muted }}>
+              Ingresa el <strong>historial</strong> por <em>comuna</em> y <em>tipo de servicio</em>,
+              y define el <strong>horizonte</strong>. El modelo devolverá el total diario y la predicción por par.
+            </p>
           </div>
 
-          {/* Tabla editable */}
-          <div style={{
-            overflowX: 'auto',
-            border: `1px solid ${theme.border}`,
-            borderRadius: 12,
-          }}>
-            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', color: '#0f172a' }}>
-                  <th className="pxy">Fecha (YYYY-MM-DD)</th>
-                  <th className="pxy">Comuna</th>
-                  <th className="pxy">Tipo de servicio</th>
-                  <th className="pxy">Count</th>
-                  <th className="pxy" style={{ width: 120, textAlign: 'center' }}>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r, idx) => (
-                  <tr key={r.id} style={{ borderTop: `1px solid ${theme.border}` }}>
-                    <td className="pxy">
-                      <input
-                        type="date"
-                        value={r.date}
-                        onChange={(e) => updateRow(r.id, 'date', e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-                      />
-                    </td>
-                    <td className="pxy">
-                      <input
-                        type="text"
-                        placeholder="santiago"
-                        value={r.comuna}
-                        onChange={(e) => updateRow(r.id, 'comuna', e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-                      />
-                    </td>
-                    <td className="pxy">
-                      <input
-                        type="text"
-                        placeholder="instalacion / reparacion…"
-                        value={r.tipo_servicio}
-                        onChange={(e) => updateRow(r.id, 'tipo_servicio', e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-                      />
-                    </td>
-                    <td className="pxy">
-                      <input
-                        type="number"
-                        min={0}
-                        value={r.count}
-                        onChange={(e) => updateRow(r.id, 'count', e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-                      />
-                    </td>
-                    <td className="pxy" style={{ textAlign: 'center' }}>
-                      <button
-                        type="button"
-                        onClick={() => removeRow(r.id)}
-                        className="logout-btn"
-                        style={{ background: '#ef4444' }}
-                        disabled={rows.length === 1}
-                        title={rows.length === 1 ? 'Debe quedar al menos una fila' : 'Eliminar fila'}
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {/* Pie con indicación */}
-                <tr>
-                  <td colSpan={5} style={{ padding: '10px 14px', color: theme.muted }}>
-                    Tip: usa valores en minúsculas para <em>comuna</em> y <em>tipo_servicio</em>, p. ej. “santiago”, “instalacion”.
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {touched && !validation.ok && (
-            <div style={{ color: '#b91c1c', marginTop: 12 }}>
-              {validation.msg}
-            </div>
-          )}
-          {error && (
-            <div style={{ color: '#b91c1c', marginTop: 12 }}>
-              {error}
-            </div>
-          )}
-        </div>
-
-        {/* Resultados */}
-        {(daily.length > 0 || pairs.length > 0) && (
+          {/* Card del formulario */}
           <div
             className="menu-card"
             style={{
               background: theme.surface,
               border: `1px solid ${theme.border}`,
               boxShadow: '0 8px 24px rgba(2,6,23,0.06)',
+              borderRadius: 16,
+              padding: 18,
+              marginBottom: 24
             }}
           >
-            <h3 style={{ marginBottom: 12 }}>Resultados</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+              <label htmlFor="horizon"><strong>Horizonte (días)</strong></label>
+              <input
+                id="horizon"
+                type="number"
+                min={1}
+                max={30}
+                value={horizon}
+                onChange={(e) => setHorizon(e.target.value)}
+                style={{ width: 120, padding: '8px 10px', border: `1px solid ${theme.border}`, borderRadius: 8 }}
+                onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              />
+              <div style={{ flex: 1 }} />
 
-            {/* Daily forecast */}
-            {daily.length > 0 && (
-              <>
-                <h4 style={{ color: theme.muted, marginBottom: 8 }}>Pronóstico diario (total)</h4>
-                <div style={{ overflowX: 'auto', border: `1px solid ${theme.border}`, borderRadius: 12 }}>
-                  <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-                    <thead>
-                      <tr style={{ background: '#f8fafc' }}>
-                        <th className="pxy">Fecha</th>
-                        <th className="pxy">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {daily.map((d) => (
-                        <tr key={d.date} style={{ borderTop: `1px solid ${theme.border}` }}>
-                          <td className="pxy">{d.date}</td>
-                          <td className="pxy">{Number(d.total).toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
+              <button
+                type="button"
+                onClick={loadRealData}
+                className="logout-btn"
+                style={{ background: '#198754', border: 'none', color: '#fff', padding: '10px 14px', borderRadius: 10, cursor: 'pointer' }}
+                disabled={loading}
+              >
+                <i className="fas fa-database me-2"></i>
+                Cargar Datos Reales
+              </button>
+
+              <button
+                type="button"
+                onClick={addRow}
+                className="logout-btn"
+                style={{ background: theme.primary, border: 'none', color: '#fff', padding: '10px 14px', borderRadius: 10, cursor: 'pointer' }}
+              >
+                + Agregar fila
+              </button>
+              <button
+                type="button"
+                onClick={clearAll}
+                className="logout-btn"
+                style={{ background: '#adb5bd', border: 'none', color: '#fff', padding: '10px 14px', borderRadius: 10, cursor: 'pointer' }}
+              >
+                Limpiar
+              </button>
+              <button
+                type="button"
+                onClick={predict}
+                className="logout-btn"
+                style={{ background: theme.primaryDark, border: 'none', color: '#fff', padding: '10px 14px', borderRadius: 10, cursor: 'pointer' }}
+                disabled={loading}
+              >
+                {loading ? 'Calculando…' : 'Predecir'}
+              </button>
+            </div>
+
+            {/* Tabla editable */}
+            <div style={{
+              overflowX: 'auto',
+              border: `1px solid ${theme.border}`,
+              borderRadius: 12,
+            }}>
+              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', color: '#0f172a' }}>
+                    <th className="pxy">Fecha (YYYY-MM-DD)</th>
+                    <th className="pxy">Comuna</th>
+                    <th className="pxy">Tipo de servicio</th>
+                    <th className="pxy">Count</th>
+                    <th className="pxy" style={{ width: 120, textAlign: 'center' }}>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r, idx) => (
+                    <tr key={r.id} style={{ borderTop: `1px solid ${theme.border}` }}>
+                      <td className="pxy">
+                        <input
+                          type="date"
+                          value={r.date}
+                          onChange={(e) => updateRow(r.id, 'date', e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+                          style={{ width: '100%', padding: '8px 10px', border: `1px solid ${theme.border}`, borderRadius: 8 }}
+                        />
+                      </td>
+                      <td className="pxy">
+                        <input
+                          type="text"
+                          placeholder="santiago"
+                          value={r.comuna}
+                          onChange={(e) => updateRow(r.id, 'comuna', e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+                          style={{ width: '100%', padding: '8px 10px', border: `1px solid ${theme.border}`, borderRadius: 8 }}
+                        />
+                      </td>
+                      <td className="pxy">
+                        <input
+                          type="text"
+                          placeholder="instalacion / reparacion…"
+                          value={r.tipo_servicio}
+                          onChange={(e) => updateRow(r.id, 'tipo_servicio', e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+                          style={{ width: '100%', padding: '8px 10px', border: `1px solid ${theme.border}`, borderRadius: 8 }}
+                        />
+                      </td>
+                      <td className="pxy">
+                        <input
+                          type="number"
+                          min={0}
+                          value={r.count}
+                          onChange={(e) => updateRow(r.id, 'count', e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+                          style={{ width: '100%', padding: '8px 10px', border: `1px solid ${theme.border}`, borderRadius: 8 }}
+                        />
+                      </td>
+                      <td className="pxy" style={{ textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => removeRow(r.id)}
+                          className="logout-btn"
+                          style={{ background: '#ef4444', border: 'none', color: '#fff', padding: '10px 14px', borderRadius: 10, cursor: 'pointer' }}
+                          disabled={rows.length === 1}
+                          title={rows.length === 1 ? 'Debe quedar al menos una fila' : 'Eliminar fila'}
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {/* Pie con indicación */}
+                  <tr>
+                    <td colSpan={5} style={{ padding: '10px 14px', color: theme.muted }}>
+                      Tip: usa valores en minúsculas para <em>comuna</em> y <em>tipo_servicio</em>, p. ej. “santiago”, “instalacion”.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {touched && !validation.ok && (
+              <div style={{ color: '#b91c1c', marginTop: 12 }}>
+                {validation.msg}
+              </div>
             )}
-
-            {/* Pair forecast */}
-            {pairs.length > 0 && (
-              <>
-                <h4 style={{ color: theme.muted, margin: '18px 0 8px' }}>
-                  Pronóstico por par (comuna / tipo_servicio)
-                </h4>
-                <div style={{ display: 'grid', gap: 16 }}>
-                  {pairs.map((p, i) => {
-                    const nextDays = Array.isArray(p.next_days) ? p.next_days : [];
-                    return (
-                      <div
-                        key={`${p.comuna || 'nocom'}-${p.tipo_servicio || 'noserv'}-${i}`}
-                        style={{
-                          border: `1px solid ${theme.border}`,
-                          borderRadius: 12,
-                          padding: 12,
-                          background: '#fbfdff',
-                        }}
-                      >
-                        <div style={{ marginBottom: 8 }}>
-                          <strong>{p.comuna || '(sin comuna)'}</strong> — <em>{p.tipo_servicio || '(sin tipo)'}</em>
-                        </div>
-                        <div style={{ overflowX: 'auto' }}>
-                          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-                            <thead>
-                              <tr style={{ background: '#f8fafc' }}>
-                                {nextDays.map((_, idx2) => (
-                                  <th key={idx2} className="pxy">D+{idx2 + 1}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                {nextDays.map((v, idx2) => (
-                                  <td key={idx2} className="pxy">{Number(v).toFixed(2)}</td>
-                                ))}
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
+            {error && (
+              <div style={{ color: '#b91c1c', marginTop: 12 }}>
+                {error}
+              </div>
             )}
           </div>
-        )}
-      </main>
+
+          {/* Resultados */}
+          {(daily.length > 0 || pairs.length > 0) && (
+            <div
+              className="menu-card"
+              style={{
+                background: theme.surface,
+                border: `1px solid ${theme.border}`,
+                boxShadow: '0 8px 24px rgba(2,6,23,0.06)',
+                borderRadius: 16,
+                padding: 18
+              }}
+            >
+              <h3 style={{ marginBottom: 12 }}>Resultados</h3>
+
+              {/* Daily forecast */}
+              {daily.length > 0 && (
+                <>
+                  <h4 style={{ color: theme.muted, marginBottom: 8 }}>Pronóstico diario (total)</h4>
+                  <div style={{ overflowX: 'auto', border: `1px solid ${theme.border}`, borderRadius: 12 }}>
+                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc' }}>
+                          <th className="pxy">Fecha</th>
+                          <th className="pxy">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {daily.map((d) => (
+                          <tr key={d.date} style={{ borderTop: `1px solid ${theme.border}` }}>
+                            <td className="pxy">{d.date}</td>
+                            <td className="pxy">{Number(d.total).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+
+              {/* Pair forecast */}
+              {pairs.length > 0 && (
+                <>
+                  <h4 style={{ color: theme.muted, margin: '18px 0 8px' }}>
+                    Pronóstico por par (comuna / tipo_servicio)
+                  </h4>
+                  <div style={{ display: 'grid', gap: 16 }}>
+                    {pairs.map((p, i) => {
+                      const nextDays = Array.isArray(p.next_days) ? p.next_days : [];
+                      return (
+                        <div
+                          key={`${p.comuna || 'nocom'}-${p.tipo_servicio || 'noserv'}-${i}`}
+                          style={{
+                            border: `1px solid ${theme.border}`,
+                            borderRadius: 12,
+                            padding: 12,
+                            background: '#fbfdff',
+                          }}
+                        >
+                          <div style={{ marginBottom: 8 }}>
+                            <strong>{p.comuna || '(sin comuna)'}</strong> — <em>{p.tipo_servicio || '(sin tipo)'}</em>
+                          </div>
+                          <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
+                              <thead>
+                                <tr style={{ background: '#f8fafc' }}>
+                                  {nextDays.map((_, idx2) => (
+                                    <th key={idx2} className="pxy">D+{idx2 + 1}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  {nextDays.map((v, idx2) => (
+                                    <td key={idx2} className="pxy">{Number(v).toFixed(2)}</td>
+                                  ))}
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </main>
+      </div>
 
       {/* Estilos mínimos locales para padding de celdas */}
       <style>{`
         .pxy { padding: 10px 14px; text-align: left; }
-        input[type="text"], input[type="number"], input[type="date"], select {
-          width: 100%;
-          padding: 8px 10px;
-          border: 1px solid ${theme.border};
-          border-radius: 8px;
-          outline: none;
-        }
-        input:focus, select:focus {
-          border-color: ${theme.primary};
-          box-shadow: 0 0 0 3px rgba(13,110,253,0.12);
-        }
-        .logout-btn {
-          border: none;
-          color: #fff;
-          padding: 10px 14px;
-          border-radius: 10px;
-          cursor: pointer;
-          transition: transform .05s ease;
-        }
-        .logout-btn:active { transform: translateY(1px); }
-        .menu-card { border-radius: 16px; padding: 18px; }
-        .admin-menu-main { display: flex; flex-direction: column; }
+        .sidebar-btn:hover { background-color: #f1f5f9 !important; }
       `}</style>
     </div>
   );

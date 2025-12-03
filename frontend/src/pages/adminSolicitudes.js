@@ -259,6 +259,13 @@ export default function AdminSolicitudes() {
             <i className="fas fa-chart-line"></i>
             📈 Métricas
           </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/modelo-predictivo')}
+          >
+            <i className="fas fa-brain"></i>
+            🔮 Modelo Predictivo
+          </button>
         </nav>
 
         <main className="admin-solicitudes-content">

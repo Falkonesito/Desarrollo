@@ -54,7 +54,7 @@ export default function AdminTecnicos() {
           </div>
           <div className="admin-info">
             <span>Administrador</span>
-            <button className="logout-btn" onClick={() => { localStorage.clear(); window.location.href='/'; }}>
+            <button className="logout-btn" onClick={() => { localStorage.clear(); window.location.href = '/'; }}>
               Cerrar Sesión
             </button>
           </div>
@@ -83,6 +83,10 @@ export default function AdminTecnicos() {
             <i className="fas fa-chart-line"></i>
             📈 Métricas
           </button>
+          <button className="sidebar-btn" onClick={() => navigate('/admin/modelo-predictivo')}>
+            <i className="fas fa-brain"></i>
+            🔮 Modelo Predictivo
+          </button>
         </nav>
 
         <main className="admin-tecnicos-content">
@@ -103,7 +107,7 @@ export default function AdminTecnicos() {
             </div>
           </div>
 
-          {error && <div className="alert alert-danger" style={{marginBottom: 12}}>{error}</div>}
+          {error && <div className="alert alert-danger" style={{ marginBottom: 12 }}>{error}</div>}
 
           {cargando ? (
             <div className="text-muted">Cargando técnicos...</div>

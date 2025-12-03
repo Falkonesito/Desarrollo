@@ -284,33 +284,46 @@ const AdminMetricas = () => {
       </header>
 
       <div className="admin-metricas-layout">
-        {/* Sidebar simplificado o eliminado si se prefiere full width, aquí lo mantenemos */}
         <nav className="admin-metricas-sidebar">
-          <div className="sidebar-sticky">
-            <ul className="sidebar-nav">
-              <li className="nav-item active">
-                <a className="nav-link">
-                  <i className="fas fa-tachometer-alt me-2"></i>
-                  Resumen
-                </a>
-              </li>
-              {/* Más items si se desea */}
-            </ul>
-
-            <div className="sidebar-summary">
-              <h6>Estado del Sistema</h6>
-              <div className="summary-stats">
-                <div className="summary-item">
-                  <span>Online</span>
-                  <span className="status-dot online"></span>
-                </div>
-                <div className="summary-item">
-                  <span>Versión</span>
-                  <span className="text-muted">1.2.0</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/menu')}
+          >
+            <i className="fas fa-home"></i>
+            Menú Principal
+          </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/solicitudes')}
+          >
+            <i className="fas fa-tools"></i>
+            📋 Solicitudes
+          </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/clientes')}
+          >
+            <i className="fas fa-users"></i>
+            👥 Clientes
+          </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/tecnicos')}
+          >
+            <i className="fas fa-user-cog"></i>
+            👨‍💻 Técnicos
+          </button>
+          <button className="sidebar-btn active">
+            <i className="fas fa-chart-line"></i>
+            📈 Métricas
+          </button>
+          <button
+            className="sidebar-btn"
+            onClick={() => navigate('/admin/modelo-predictivo')}
+          >
+            <i className="fas fa-brain"></i>
+            🔮 Modelo Predictivo
+          </button>
         </nav>
 
         <main className="admin-metricas-content">
@@ -487,7 +500,6 @@ const AdminMetricas = () => {
               </table>
             </div>
           </div>
-
         </main>
       </div>
     </div>
