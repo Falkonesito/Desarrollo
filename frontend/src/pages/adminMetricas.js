@@ -3,6 +3,32 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/adminMetricas.css';
 import { api } from '../utils/api';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
+import { Line, Bar } from 'react-chartjs-2';
+
+// Registrar componentes de Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 const AdminMetricas = () => {
   const navigate = useNavigate();
@@ -88,16 +114,6 @@ const AdminMetricas = () => {
     return (raw || []).filter(r => (c ? r.comuna === c : true) && (s ? r.tipo_servicio === s : true));
   }, [raw, filtroComuna, filtroServicio]);
 
-  // KPIs basados en filtros (si quieres usarlos en las cards)
-  const kpisFiltrados = React.useMemo(() => {
-    const acc = { total: 0, pendientes: 0, en_revision: 0, asignadas: 0, en_progreso: 0, completadas: 0, canceladas: 0 };
-    for (const r of filtradas) {
-      acc.total++;
-      if (Object.prototype.hasOwnProperty.call(acc, r.estado)) acc[r.estado]++;
-    }
-    return acc;
-  }, [filtradas]);
-
   // Serie por día filtrada (para el gráfico de evolución)
   const porDiaFiltrado = React.useMemo(() => {
     const map = new Map();
@@ -110,9 +126,131 @@ const AdminMetricas = () => {
     return Array.from(map.values()).sort((a, b) => a.fecha.localeCompare(b.fecha));
   }, [filtradas]);
 
-  // ⚠️ Decide: cards globales (kpis) o filtradas (kpisFiltrados)
-  // Mantengo las cards con KPIs globales como pediste:
   const solicitudesAbiertas = kpis.pendientes + kpis.enProgreso;
+
+  // --- Configuración de Gráficos ---
+
+  // 1. Gráfico de Líneas (Evolución)
+  const lineChartData = {
+    labels: porDiaFiltrado.map(d => d.fecha),
+    datasets: [
+      {
+        label: 'Solicitudes Totales',
+        data: porDiaFiltrado.map(d => d.total_solicitudes),
+        borderColor: '#3182ce', // accent-blue
+        backgroundColor: 'rgba(49, 130, 206, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      },
+      {
+        label: 'Completadas',
+        data: porDiaFiltrado.map(d => d.completadas),
+        borderColor: '#38a169', // success
+        backgroundColor: 'rgba(56, 161, 105, 0.0)',
+        borderDash: [5, 5],
+        tension: 0.4,
+        pointRadius: 3,
+      }
+    ],
+  };
+
+  const lineChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          usePointStyle: true,
+          font: { family: "'Segoe UI', sans-serif", size: 12 }
+        }
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        titleColor: '#2d3748',
+        bodyColor: '#4a5568',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+        padding: 10,
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: '#f7fafc' },
+        ticks: { font: { size: 11 }, color: '#718096' }
+      },
+      x: {
+        grid: { display: false },
+        ticks: { font: { size: 11 }, color: '#718096', maxRotation: 45, minRotation: 45 }
+      }
+    }
+  };
+
+  // 2. Gráfico de Barras Horizontal (Técnicos)
+  const barChartData = {
+    labels: rendimiento.map(t => t.tecnico_nombre),
+    datasets: [
+      {
+        label: 'Completadas',
+        data: rendimiento.map(t => t.completadas),
+        backgroundColor: '#38a169',
+        borderRadius: 4,
+        barPercentage: 0.7,
+      },
+      {
+        label: 'Total Asignadas',
+        data: rendimiento.map(t => t.total_solicitudes),
+        backgroundColor: '#e2e8f0',
+        borderRadius: 4,
+        barPercentage: 0.7,
+        // Hacemos que las barras se superpongan un poco visualmente si se desea, 
+        // pero Chart.js por defecto las pone al lado o apiladas. 
+        // Para "progreso", mejor dejarlas agrupadas o usar un truco de stack si se quiere.
+        // Aquí las dejaremos agrupadas para comparar.
+      }
+    ]
+  };
+
+  const barChartOptions = {
+    indexAxis: 'y', // Horizontal
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        titleColor: '#2d3748',
+        bodyColor: '#4a5568',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        grid: { color: '#f7fafc' }
+      },
+      y: {
+        grid: { display: false }
+      }
+    }
+  };
+
+  // Helper para status badge
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'completada': return <span className="badge badge-success">Completada</span>;
+      case 'en_proceso': return <span className="badge badge-warning">En Progreso</span>;
+      case 'asignada': return <span className="badge badge-info">Asignada</span>;
+      case 'pendiente': return <span className="badge badge-danger">Pendiente</span>;
+      default: return <span className="badge badge-secondary">{status}</span>;
+    }
+  };
 
   return (
     <div className="admin-metricas-container">
@@ -124,26 +262,21 @@ const AdminMetricas = () => {
               onClick={() => navigate('/admin/menu')}
             >
               <i className="fas fa-arrow-left me-2"></i>
-              Volver al Menú
+              Volver
             </button>
             <h1>
-              <i className="fas fa-chart-line"></i>
-              Analytics & Métricas - INFOSER
+              <i className="fas fa-chart-pie me-2"></i>
+              Dashboard Administrativo
             </h1>
           </div>
           <div className="header-actions">
-            <button className="btn-export">
-              <i className="fas fa-download me-2"></i>
-              Exportar
-            </button>
             <div className="admin-info">
-              <span>Administrador</span>
+              <span className="admin-badge">Admin</span>
               <button
                 className="logout-btn"
                 onClick={() => (window.location.href = '/')}
               >
-                <i className="fas fa-sign-out-alt me-2"></i>
-                Salir
+                <i className="fas fa-sign-out-alt"></i>
               </button>
             </div>
           </div>
@@ -151,49 +284,29 @@ const AdminMetricas = () => {
       </header>
 
       <div className="admin-metricas-layout">
+        {/* Sidebar simplificado o eliminado si se prefiere full width, aquí lo mantenemos */}
         <nav className="admin-metricas-sidebar">
           <div className="sidebar-sticky">
             <ul className="sidebar-nav">
               <li className="nav-item active">
                 <a className="nav-link">
                   <i className="fas fa-tachometer-alt me-2"></i>
-                  Dashboard
+                  Resumen
                 </a>
               </li>
-              <li className="nav-item">
-                <a className="nav-link">
-                  <i className="fas fa-map-marked-alt me-2"></i>
-                  Análisis Geográfico
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link">
-                  <i className="fas fa-cogs me-2"></i>
-                  Análisis de Servicios
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link">
-                  <i className="fas fa-calendar-alt me-2"></i>
-                  Tendencia Temporal
-                </a>
-              </li>
+              {/* Más items si se desea */}
             </ul>
 
             <div className="sidebar-summary">
-              <h6>Resumen del Sistema</h6>
+              <h6>Estado del Sistema</h6>
               <div className="summary-stats">
                 <div className="summary-item">
-                  <span>Totales:</span>
-                  <span className="text-success">{kpis.totalSolicitudes}</span>
+                  <span>Online</span>
+                  <span className="status-dot online"></span>
                 </div>
                 <div className="summary-item">
-                  <span>Completadas:</span>
-                  <span className="text-success">{kpis.completadas}</span>
-                </div>
-                <div className="summary-item">
-                  <span>Abiertas:</span>
-                  <span className="text-warning">{solicitudesAbiertas}</span>
+                  <span>Versión</span>
+                  <span className="text-muted">1.2.0</span>
                 </div>
               </div>
             </div>
@@ -202,256 +315,179 @@ const AdminMetricas = () => {
 
         <main className="admin-metricas-content">
           {error && (
-            <div
-              className="alert alert-danger"
-              style={{ marginBottom: '1rem', padding: '0.75rem 1rem' }}
-            >
-              <strong>Error: </strong>
+            <div className="alert alert-danger">
+              <i className="fas fa-exclamation-circle me-2"></i>
               {error}
             </div>
           )}
 
-          {/* Filtros */}
-          <div className="filters-section">
-            <div className="filters-card">
-              <div className="filters-content">
-                <div className="filter-group">
-                  <strong>Filtros:</strong>
-                </div>
-                <div className="filter-group">
-                  <select
-                    value={filtroTiempo}
-                    onChange={(e) => setFiltroTiempo(e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="7-dias">Últimos 7 días</option>
-                    <option value="30-dias">Últimos 30 días</option>
-                    <option value="90-dias">Últimos 90 días</option>
-                    <option value="este-año">Este año</option>
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <select
-                    value={filtroComuna}
-                    onChange={(e) => setFiltroComuna(e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="todas">Todas las comunas</option>
-                    <option value="melipilla">Melipilla</option>
-                    <option value="santiago">Santiago Centro</option>
-                    <option value="providencia">Providencia</option>
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <select
-                    value={filtroServicio}
-                    onChange={(e) => setFiltroServicio(e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="todos">Todos los servicios</option>
-                    <option value="instalacion">Instalación</option>
-                    <option value="mantenimiento">Mantenimiento</option>
-                    <option value="reparacion">Reparación</option>
-                    <option value="asesoria">Asesoría</option>
-                  </select>
-                </div>
-                <div className="filter-group">
-                  <button
-                    className="btn-refresh"
-                    onClick={cargarMetricas}
-                    disabled={loading}
-                  >
-                    <i className="fas fa-sync-alt me-2"></i>
-                    {loading ? 'Cargando...' : 'Actualizar'}
-                  </button>
-                </div>
-              </div>
+          {/* Barra de Filtros */}
+          <div className="filters-bar">
+            <div className="filter-group">
+              <label><i className="far fa-calendar-alt me-1"></i> Período:</label>
+              <select
+                value={filtroTiempo}
+                onChange={(e) => setFiltroTiempo(e.target.value)}
+                className="filter-select"
+              >
+                <option value="7-dias">Últimos 7 días</option>
+                <option value="30-dias">Últimos 30 días</option>
+                <option value="90-dias">Últimos 3 meses</option>
+                <option value="este-año">Este año</option>
+              </select>
             </div>
+
+            <div className="filter-group">
+              <label><i className="fas fa-map-marker-alt me-1"></i> Comuna:</label>
+              <select
+                value={filtroComuna}
+                onChange={(e) => setFiltroComuna(e.target.value)}
+                className="filter-select"
+              >
+                <option value="todas">Todas</option>
+                <option value="melipilla">Melipilla</option>
+                <option value="santiago">Santiago</option>
+                <option value="providencia">Providencia</option>
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label><i className="fas fa-tools me-1"></i> Servicio:</label>
+              <select
+                value={filtroServicio}
+                onChange={(e) => setFiltroServicio(e.target.value)}
+                className="filter-select"
+              >
+                <option value="todos">Todos</option>
+                <option value="instalacion">Instalación</option>
+                <option value="mantenimiento">Mantenimiento</option>
+                <option value="reparacion">Reparación</option>
+              </select>
+            </div>
+
+            <button
+              className="btn-refresh"
+              onClick={cargarMetricas}
+              disabled={loading}
+            >
+              <i className={`fas fa-sync-alt ${loading ? 'fa-spin' : ''}`}></i>
+            </button>
           </div>
 
-          {/* KPIs principales */}
+          {/* KPIs Cards */}
           <div className="kpis-grid">
-            <div className="kpi-card">
-              <div className="kpi-content">
-                <div className="kpi-info">
-                  <h6 className="kpi-title">Servicios Totales</h6>
-                  <h3 className="kpi-value text-primary">
-                    {kpis.totalSolicitudes}
-                  </h3>
-                </div>
-                <div className="kpi-icon">
-                  <i className="fas fa-tools text-primary"></i>
-                </div>
+            <div className="kpi-card primary">
+              <div className="kpi-icon-wrapper">
+                <i className="fas fa-clipboard-list"></i>
               </div>
-              <p className="kpi-trend">
-                Total histórico de solicitudes registradas
-              </p>
+              <div className="kpi-data">
+                <h3>{kpis.totalSolicitudes}</h3>
+                <p>Solicitudes Totales</p>
+              </div>
             </div>
 
-            <div className="kpi-card">
-              <div className="kpi-content">
-                <div className="kpi-info">
-                  <h6 className="kpi-title">Completadas</h6>
-                  <h3 className="kpi-value text-success">
-                    {kpis.completadas}
-                  </h3>
-                </div>
-                <div className="kpi-icon">
-                  <i className="fas fa-check-circle text-success"></i>
-                </div>
+            <div className="kpi-card success">
+              <div className="kpi-icon-wrapper">
+                <i className="fas fa-check-double"></i>
               </div>
-              <p className="kpi-trend">Servicios cerrados correctamente</p>
+              <div className="kpi-data">
+                <h3>{kpis.completadas}</h3>
+                <p>Completadas</p>
+              </div>
             </div>
 
-            <div className="kpi-card">
-              <div className="kpi-content">
-                <div className="kpi-info">
-                  <h6 className="kpi-title">Abiertas (Pend. + En Progreso)</h6>
-                  <h3 className="kpi-value text-warning">
-                    {solicitudesAbiertas}
-                  </h3>
-                </div>
-                <div className="kpi-icon">
-                  <i className="fas fa-hourglass-half text-warning"></i>
-                </div>
+            <div className="kpi-card warning">
+              <div className="kpi-icon-wrapper">
+                <i className="fas fa-clock"></i>
               </div>
-              <p className="kpi-trend">Casos que aún requieren gestión</p>
+              <div className="kpi-data">
+                <h3>{solicitudesAbiertas}</h3>
+                <p>En Curso / Pendientes</p>
+              </div>
+            </div>
+
+            {/* KPI Extra: Tasa de éxito (ejemplo) */}
+            <div className="kpi-card info">
+              <div className="kpi-icon-wrapper">
+                <i className="fas fa-percentage"></i>
+              </div>
+              <div className="kpi-data">
+                <h3>
+                  {kpis.totalSolicitudes > 0
+                    ? Math.round((kpis.completadas / kpis.totalSolicitudes) * 100)
+                    : 0}%
+                </h3>
+                <p>Tasa de Finalización</p>
+              </div>
             </div>
           </div>
 
-          {/* Fila 1: Evolución temporal + rendimiento técnicos */}
-          <div className="charts-row">
-            <div className="chart-card">
-              <div className="chart-header bg-info">
-                <h5>
-                  <i className="fas fa-chart-line me-2"></i>
-                  Evolución de Solicitudes por Día
-                </h5>
+          {/* Gráficos */}
+          <div className="charts-grid">
+            {/* Gráfico Lineal */}
+            <div className="chart-container main-chart">
+              <div className="chart-header-simple">
+                <h5>Evolución de Solicitudes</h5>
               </div>
-              <div className="chart-body">
-                {(porDiaFiltrado.length === 0) ? (
-                  <p>No hay datos suficientes aún.</p>
+              <div className="chart-canvas-wrapper" style={{ height: '300px' }}>
+                {porDiaFiltrado.length > 0 ? (
+                  <Line data={lineChartData} options={lineChartOptions} />
                 ) : (
-                  <div className="trend-chart">
-                    <div className="trend-line">
-                      {porDiaFiltrado.map((d, idx) => (
-                        <div
-                          key={idx}
-                          className="trend-point"
-                          style={{
-                            height: `${
-                              (d.total_solicitudes /
-                                Math.max(
-                                  ...porDiaFiltrado.map(
-                                    (x) => x.total_solicitudes || 1
-                                  )
-                                )) * 100
-                            }%`,
-                          }}
-                          title={`${d.total_solicitudes} solicitudes el ${d.fecha}`}
-                        ></div>
-                      ))}
-                    </div>
-                    <div className="trend-labels">
-                      {porDiaFiltrado.map((d, idx) => (
-                        <span key={idx} className="trend-label">
-                          {d.fecha}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                  <div className="no-data">Sin datos para mostrar</div>
                 )}
               </div>
             </div>
 
-            <div className="chart-card">
-              <div className="chart-header bg-success">
-                <h5>
-                  <i className="fas fa-user-cog me-2"></i>
-                  Rendimiento de Técnicos
-                </h5>
+            {/* Gráfico Barras */}
+            <div className="chart-container side-chart">
+              <div className="chart-header-simple">
+                <h5>Rendimiento Técnico</h5>
               </div>
-              <div className="chart-body">
-                {rendimiento.length === 0 ? (
-                  <p>No hay técnicos con solicitudes aún.</p>
+              <div className="chart-canvas-wrapper" style={{ height: '300px' }}>
+                {rendimiento.length > 0 ? (
+                  <Bar data={barChartData} options={barChartOptions} />
                 ) : (
-                  <div className="tech-chart">
-                    {rendimiento.map((t) => (
-                      <div key={t.tecnico_id} className="tech-item">
-                        <div className="tech-info">
-                          <span className="tech-name">
-                            {t.tecnico_nombre}
-                          </span>
-                          <span className="tech-count">
-                            {t.completadas}/{t.total_solicitudes}
-                          </span>
-                        </div>
-                        <div className="tech-bar">
-                          <div
-                            className="tech-fill"
-                            style={{
-                              width: `${
-                                t.total_solicitudes > 0
-                                  ? (t.completadas / t.total_solicitudes) * 100
-                                  : 0
-                              }%`,
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <div className="no-data">Sin datos de técnicos</div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Fila 2: Últimas solicitudes */}
-          <div className="charts-row">
-            <div className="chart-card wide">
-              <div className="chart-header bg-secondary">
-                <h5>
-                  <i className="fas fa-list me-2"></i>
-                  Últimas Solicitudes Registradas
-                </h5>
-              </div>
-              <div className="chart-body">
-                {recientes.length === 0 ? (
-                  <p>No hay solicitudes registradas aún.</p>
-                ) : (
-                  <div className="location-chart">
-                    {recientes.map((s) => (
-                      <div key={s.id} className="location-item">
-                        <div className="location-info">
-                          <span className="location-name">
-                            #{s.id} - {s.titulo}
-                          </span>
-                          <span className="location-count">
-                            {s.estado_actual}
-                          </span>
-                        </div>
-                        <div className="location-bar">
-                          <div
-                            className="location-fill"
-                            style={{
-                              width:
-                                s.estado_actual === 'completada'
-                                  ? '100%'
-                                  : s.estado_actual === 'en_proceso'
-                                  ? '70%'
-                                  : s.estado_actual === 'asignada'
-                                  ? '50%'
-                                  : '30%',
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+          {/* Tabla Recientes */}
+          <div className="recent-table-container">
+            <div className="table-header">
+              <h5>Últimas Solicitudes</h5>
+            </div>
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recientes.length > 0 ? (
+                    recientes.map((s) => (
+                      <tr key={s.id}>
+                        <td>#{s.id}</td>
+                        <td>{s.titulo}</td>
+                        <td>{getStatusBadge(s.estado_actual)}</td>
+                        <td>{new Date(s.fecha_creacion).toLocaleDateString()}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="text-center py-3">No hay solicitudes recientes</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
+
         </main>
       </div>
     </div>
