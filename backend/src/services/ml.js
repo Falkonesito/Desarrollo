@@ -2,7 +2,8 @@
 // Proxy al servicio de ML en Python (FastAPI)
 
 // URL del servicio Python (por defecto localhost:8000)
-const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8001';
+// URL del servicio Python (por defecto la pública de Render si no hay env)
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'https://infoser-ml-service.onrender.com';
 
 /**
  * Helper para esperar un tiempo dado (ms)
@@ -26,6 +27,7 @@ async function forecastML(body) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', // Fake browser to bypass Cloudflare
         },
         body: JSON.stringify(body),
       });
