@@ -26,7 +26,6 @@ async function forecastML(body) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', // Fake browser to bypass Cloudflare
         },
         body: JSON.stringify(body),
       });
@@ -55,7 +54,7 @@ async function forecastML(body) {
       return data; // { daily_forecast, pair_forecast }
 
     } catch (error) {
-      console.error(`[ML Proxy] Error conectando con servicio Python (Intento ${attempt + 1}):`, error.message);
+      console.error(`[ML Proxy] Error conectando con servicio Python en ${ML_SERVICE_URL} (Intento ${attempt + 1}):`, error);
 
       // Si falla la conexión (ECONNREFUSED), lanzamos error claro sin reintentar (o podríamos reintentar si es flaky)
       if (error.cause && error.cause.code === 'ECONNREFUSED') {
@@ -64,7 +63,7 @@ async function forecastML(body) {
 
       attempt++;
       if (attempt >= MAX_RETRIES) {
-        throw error;
+        throw new Error(`Fallo final conectando a ML Service: ${error.message}`);
       }
       await wait(1000 * Math.pow(2, attempt - 1));
     }
