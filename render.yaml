@@ -29,6 +29,9 @@ services:
       - key: NODE_VERSION
         value: 18.17.0
       - key: ML_SERVICE_URL
-        value: http://infoser-ml-service:10000
+        fromService:
+          type: web
+          name: infoser-ml-service
+          property: url
       # Asegúrate de agregar tus variables de entorno reales en el Dashboard de Render
       # DB_HOST, DB_PASSWORD, etc.
