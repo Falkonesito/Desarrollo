@@ -4,13 +4,22 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 async function seed() {
-    const pool = new Pool({
-        user: process.env.DB_USER || 'postgres',
-        host: process.env.DB_HOST || 'localhost',
-        database: process.env.DB_NAME || 'infoser_ep_spa',
-        password: process.env.DB_PASSWORD || 'Falcon',
-        port: process.env.DB_PORT || 5432,
-    });
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.DATABASE_URL;
+
+    const poolConfig = process.env.DATABASE_URL
+        ? {
+            connectionString: process.env.DATABASE_URL,
+            ssl: { rejectUnauthorized: false } // Necesario para Render desde fuera
+        }
+        : {
+            user: process.env.DB_USER || 'postgres',
+            host: process.env.DB_HOST || 'localhost',
+            database: process.env.DB_NAME || 'infoser_ep_spa',
+            password: process.env.DB_PASSWORD || 'Falcon',
+            port: process.env.DB_PORT || 5432,
+        };
+
+    const pool = new Pool(poolConfig);
 
     try {
         console.log('🌱 Iniciando sembrado de datos...');
