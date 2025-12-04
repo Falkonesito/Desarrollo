@@ -63,6 +63,22 @@ export default function AdminModeloPredictivo() {
     setLoading(true);
     setError('');
     try {
+      // 1. Intentar sembrar datos si es necesario (llamada al endpoint temporal)
+      try {
+        const token = localStorage.getItem('token');
+        await fetch('https://infoser-backend.onrender.com/api/test/seed', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      } catch (e) {
+        console.warn('Seed endpoint warning:', e);
+        // Continuamos igual por si ya existían datos
+      }
+
+      // 2. Traer datos
       const { rows: rawRows } = await fetchRawData('90-dias'); // Traer últimos 90 días
 
       if (!rawRows || rawRows.length === 0) {

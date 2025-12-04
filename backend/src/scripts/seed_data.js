@@ -22,6 +22,7 @@ const PRIORIDADES = ['baja', 'media', 'alta'];
 async function seed() {
     try {
         console.log('🌱 Iniciando sembrado de datos...');
+        console.log(`🔌 Conectando a DB: ${process.env.DB_HOST || 'localhost'} como ${process.env.DB_USER || 'postgres'}`);
 
         // 1. Crear o buscar cliente de prueba
         const email = 'cliente_test_ml@infoser.cl';
@@ -100,4 +101,10 @@ async function seed() {
     }
 }
 
-seed();
+// Exportar la función para usarla en server.js
+module.exports = { seed };
+
+// Si se ejecuta directamente desde la terminal: node seed_data.js
+if (require.main === module) {
+    seed();
+}

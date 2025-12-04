@@ -1232,6 +1232,9 @@ app.get(
 // -------------------------------------------------------------------
 // ➕ RUTA ML (ADMIN). PROXY A FASTAPI PARA USAR DESDE EL FRONTEND
 // -------------------------------------------------------------------
+// -------------------------------------------------------------------
+// ➕ RUTA ML (ADMIN). PROXY A FASTAPI PARA USAR DESDE EL FRONTEND
+// -------------------------------------------------------------------
 app.post(
   '/api/ml/forecast',
   verifyJWT,
@@ -1247,6 +1250,26 @@ app.post(
         success: false,
         message: e?.message || 'Error llamando al servicio ML',
       });
+    }
+  }
+);
+
+// -------------------------------------------------------------------
+// 🛠️ RUTA TEMPORAL PARA SEEDING (SOLO ADMIN)
+// -------------------------------------------------------------------
+const { seed } = require('./scripts/seed_data');
+app.post(
+  '/api/test/seed',
+  verifyJWT,
+  requireRole('administrador'),
+  async (req, res) => {
+    try {
+      console.log('🌱 Ejecutando seed desde endpoint...');
+      await seed();
+      res.json({ success: true, message: 'Datos de prueba generados correctamente' });
+    } catch (error) {
+      console.error('Error en seed:', error);
+      res.status(500).json({ success: false, message: 'Error generando datos', error: error.message });
     }
   }
 );
