@@ -3,23 +3,15 @@ const bcrypt = require('bcrypt');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
-const pool = new Pool({
-    user: process.env.DB_USER || 'postgres',
-    host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'infoser_ep_spa',
-    password: process.env.DB_PASSWORD || 'Falcon',
-    port: process.env.DB_PORT || 5432,
-});
-
-const COMUNAS = [
-    'Santiago', 'Providencia', 'Las Condes', 'Maipú', 'La Florida',
-    'Puente Alto', 'Ñuñoa', 'Vitacura', 'San Miguel', 'La Reina'
-];
-
-const TIPOS = ['instalacion', 'mantenimiento', 'reparacion', 'asesoria'];
-const PRIORIDADES = ['baja', 'media', 'alta'];
-
 async function seed() {
+    const pool = new Pool({
+        user: process.env.DB_USER || 'postgres',
+        host: process.env.DB_HOST || 'localhost',
+        database: process.env.DB_NAME || 'infoser_ep_spa',
+        password: process.env.DB_PASSWORD || 'Falcon',
+        port: process.env.DB_PORT || 5432,
+    });
+
     try {
         console.log('🌱 Iniciando sembrado de datos...');
         console.log(`🔌 Conectando a DB: ${process.env.DB_HOST || 'localhost'} como ${process.env.DB_USER || 'postgres'}`);
@@ -96,6 +88,7 @@ async function seed() {
 
     } catch (err) {
         console.error('❌ Error:', err);
+        throw err; // Re-lanzar para que el endpoint sepa que falló
     } finally {
         await pool.end();
     }
