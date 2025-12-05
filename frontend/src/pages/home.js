@@ -472,12 +472,12 @@ const Home = () => {
                           title="Seleccione el tipo de equipo que requiere para ver más detalles en la descripción al pasar el mouse."
                         >
                           <option value="">Seleccione equipos requeridos</option>
-                          <option value="camaras_colorvu" title="Tecnología avanzada para imágenes a color incluso en oscuridad total. Ideal para vigilancia nocturna nítida.">Cámaras ColorVu (24/7 color)</option>
-                          <option value="camaras_ptz" title="Cámaras con movimiento horizontal, vertical y zoom motorizado (25x). Permiten seguimiento activo.">Cámaras PTZ (Zoom 25x)</option>
-                          <option value="sistema_completo" title="Solución integral que incluye cámaras, grabador, disco duro e instalación.">Sistema completo de seguridad</option>
-                          <option value="dvr_nvr" title="Equipos de grabación y gestión de video para almacenar sus evidencias.">DVR/NVR y almacenamiento</option>
-                          <option value="accesorios" title="Cables, fuentes de poder, conectores y otros complementos necesarios.">Accesorios y cableado</option>
-                          <option value="otro" title="Equipamientos especiales a medida o no listados.">Otro equipo</option>
+                          <option value="camaras_colorvu" title="Tecnología de vanguardia que captura imágenes a todo color las 24 horas, incluso en oscuridad total. Perfecta para identificar detalles cruciales como colores de vehículos o ropa bajo cualquier condición de luz.">Cámaras ColorVu (24/7 color)</option>
+                          <option value="camaras_ptz" title="Cámaras robóticas de alto rendimiento con rotación 360° y Zoom Óptico 25x. Ideales para cubrir grandes áreas, monitorear perímetros extensos y realizar seguimiento activo de objetivos.">Cámaras PTZ (Zoom 25x)</option>
+                          <option value="sistema_completo" title="Kit de seguridad 'Llave en Mano'. Incluye evalución técnica, cámaras de alta resolución, grabador (DVR/NVR), disco duro, cableado certificado, instalación profesional y configuración móvil.">Sistema completo de seguridad</option>
+                          <option value="dvr_nvr" title="Unidades centrales de procesamiento y grabación. Gestionan el video de múltiples canales, permiten la visualización remota y almacenan semanas de grabación continua en alta definición.">DVR/NVR y almacenamiento</option>
+                          <option value="accesorios" title="Componentes esenciales para infraestructura: fuentes de poder certificadas, baluns de video HD, cajas estancas, cableado UTP/Coaxial exterior y conectores de alta calidad para garantizar estabilidad.">Accesorios y cableado</option>
+                          <option value="otro" title="Soluciones personalizadas fuera de catálogo. Seleccione esta opción si requiere integración con alarmas, control de acceso, cámaras térmicas o proyectos de ingeniería específicos.">Otro equipo</option>
                         </select>
                       </div>
 
