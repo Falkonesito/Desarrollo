@@ -3,6 +3,10 @@ const bcrypt = require('bcrypt');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
+const TIPOS = ['mantenimiento', 'reparacion', 'instalacion', 'asesoria'];
+const COMUNAS = ['Santiago', 'Providencia', 'Las Condes', 'Maipu', 'La Florida', 'Puente Alto', 'Ñuñoa'];
+const PRIORIDADES = ['alta', 'media', 'baja'];
+
 async function seed() {
     const isProduction = process.env.NODE_ENV === 'production' || process.env.DATABASE_URL;
 
@@ -72,7 +76,7 @@ async function seed() {
 
             await pool.query(
                 `INSERT INTO solicitudes 
-            (cliente_id, titulo, descripcion, direccion_servicio, comuna, region, tipo_servicio, prioridad, fecha_solicitud, estado)
+            (cliente_id, titulo, descripcion, direccion_servicio, comuna, region, tipo_servicio, prioridad, fecha_solicitud, estado_actual)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'completada')`,
                 [
                     clienteId,

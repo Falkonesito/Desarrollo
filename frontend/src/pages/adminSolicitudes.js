@@ -40,6 +40,10 @@ export default function AdminSolicitudes() {
   const [guardando, setGuardando] = useState(null);
   const [error, setError] = useState('');
 
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20); // Mostrar 20 por página
+
   // Guard de ruta (solo admin)
   useEffect(() => {
     const u = JSON.parse(localStorage.getItem('userData') || 'null');
@@ -102,6 +106,19 @@ export default function AdminSolicitudes() {
         .includes(q)
     );
   }, [filtro, solicitudes]);
+
+  // Resetear a página 1 cuando cambia el filtro
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filtro]);
+
+  // Lógica de Paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = solicitudesFiltradas.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(solicitudesFiltradas.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const actualizarSolicitud = async (id, payload) => {
     try {
@@ -344,7 +361,7 @@ export default function AdminSolicitudes() {
                     </tr>
                   </thead>
                   <tbody>
-                    {solicitudesFiltradas.map((s) => {
+                    {currentItems.map((s) => {
                       const estadoNorm = normalizarEstado(
                         s.estado_actual || 'pendiente'
                       );
@@ -483,6 +500,47 @@ export default function AdminSolicitudes() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Controles de Paginación */}
+              {totalPages > 1 && (
+                <div className="pagination-container" style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '20px', paddingBottom: '20px' }}>
+                  <button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="btn-pagination"
+                    style={{ padding: '5px 10px', border: '1px solid #ddd', background: currentPage === 1 ? '#f0f0f0' : 'white', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', borderRadius: '4px' }}
+                  >
+                    Anterior
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => paginate(i + 1)}
+                      className={`btn-pagination ${currentPage === i + 1 ? 'active' : ''}`}
+                      style={{
+                        padding: '5px 10px',
+                        border: '1px solid #ddd',
+                        background: currentPage === i + 1 ? '#007bff' : 'white',
+                        color: currentPage === i + 1 ? 'white' : 'black',
+                        cursor: 'pointer',
+                        borderRadius: '4px'
+                      }}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="btn-pagination"
+                    style={{ padding: '5px 10px', border: '1px solid #ddd', background: currentPage === totalPages ? '#f0f0f0' : 'white', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', borderRadius: '4px' }}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              )}
             </>
           )}
         </main>
