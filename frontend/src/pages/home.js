@@ -469,14 +469,15 @@ const Home = () => {
                           value={nuevaSolicitud.equipos_solicitados}
                           onChange={handleSolicitudChange}
                           disabled={cargando}
+                          title="Seleccione el tipo de equipo que requiere para ver más detalles en la descripción al pasar el mouse."
                         >
                           <option value="">Seleccione equipos requeridos</option>
-                          <option value="camaras_colorvu">Cámaras ColorVu (24/7 color)</option>
-                          <option value="camaras_ptz">Cámaras PTZ (Zoom 25x)</option>
-                          <option value="sistema_completo">Sistema completo de seguridad</option>
-                          <option value="dvr_nvr">DVR/NVR y almacenamiento</option>
-                          <option value="accesorios">Accesorios y cableado</option>
-                          <option value="otro">Otro equipo</option>
+                          <option value="camaras_colorvu" title="Tecnología avanzada para imágenes a color incluso en oscuridad total. Ideal para vigilancia nocturna nítida.">Cámaras ColorVu (24/7 color)</option>
+                          <option value="camaras_ptz" title="Cámaras con movimiento horizontal, vertical y zoom motorizado (25x). Permiten seguimiento activo.">Cámaras PTZ (Zoom 25x)</option>
+                          <option value="sistema_completo" title="Solución integral que incluye cámaras, grabador, disco duro e instalación.">Sistema completo de seguridad</option>
+                          <option value="dvr_nvr" title="Equipos de grabación y gestión de video para almacenar sus evidencias.">DVR/NVR y almacenamiento</option>
+                          <option value="accesorios" title="Cables, fuentes de poder, conectores y otros complementos necesarios.">Accesorios y cableado</option>
+                          <option value="otro" title="Equipamientos especiales a medida o no listados.">Otro equipo</option>
                         </select>
                       </div>
 
