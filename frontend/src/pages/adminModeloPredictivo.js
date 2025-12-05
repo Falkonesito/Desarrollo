@@ -38,6 +38,18 @@ export default function AdminModeloPredictivo() {
   const [pairs, setPairs] = useState([]);        // [{comuna,tipo_servicio,next_days:[]}]
   const [touched, setTouched] = useState(false); // para validar al predecir
 
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // 10 filas por página para que no sea tan largo
+
+  // Lógica de Paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentRows = rows.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(rows.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   const addRow = () => {
     setRows((r) => [
       ...r,
@@ -99,7 +111,11 @@ export default function AdminModeloPredictivo() {
       setRows(newRows);
       setDaily([]);
       setPairs([]);
+      setRows(newRows);
+      setDaily([]);
+      setPairs([]);
       setTouched(false);
+      setCurrentPage(1); // Resetear a página 1 al cargar nuevos datos
 
     } catch (err) {
       console.error(err);
@@ -359,7 +375,7 @@ export default function AdminModeloPredictivo() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r, idx) => (
+                  {currentRows.map((r, idx) => (
                     <tr key={r.id} style={{ borderTop: `1px solid ${theme.border}` }}>
                       <td className="pxy">
                         <input
@@ -423,6 +439,33 @@ export default function AdminModeloPredictivo() {
                 </tbody>
               </table>
             </div>
+
+            {/* Controles de Paginación */}
+            {totalPages > 1 && (
+              <div className="pagination-container" style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '20px' }}>
+                <button
+                  onClick={() => paginate(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="logout-btn"
+                  style={{ background: currentPage === 1 ? '#e5e7eb' : theme.surface, border: `1px solid ${theme.border}`, color: theme.text, padding: '5px 10px', borderRadius: 4, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                >
+                  Anterior
+                </button>
+
+                <span style={{ display: 'flex', alignItems: 'center', padding: '0 10px' }}>
+                  Página {currentPage} de {totalPages}
+                </span>
+
+                <button
+                  onClick={() => paginate(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="logout-btn"
+                  style={{ background: currentPage === totalPages ? '#e5e7eb' : theme.surface, border: `1px solid ${theme.border}`, color: theme.text, padding: '5px 10px', borderRadius: 4, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
 
             {touched && !validation.ok && (
               <div style={{ color: '#b91c1c', marginTop: 12 }}>
