@@ -50,11 +50,11 @@ async function seed() {
             console.log(`✅ Cliente de prueba creado (ID: ${clienteId})`);
         }
 
-        // 2. Generar 500 solicitudes
-        console.log('🚀 Generando 500 solicitudes históricas...');
+        // 2. Generar 2000 solicitudes con patrones claros
+        console.log('🚀 Generando 2000 solicitudes históricas con patrones...');
 
-        const total = 500;
-        const batchSize = 50; // Insertar en lotes para no saturar
+        const total = 2000;
+        const batchSize = 100;
         let count = 0;
 
         for (let i = 0; i < total; i++) {
@@ -62,16 +62,35 @@ async function seed() {
             const fecha = new Date();
             fecha.setDate(fecha.getDate() - diasAtras);
 
-            // Simular estacionalidad: más reparaciones en invierno (Jun-Ago)
-            // Mes 0-11. Invierno aprox 5,6,7.
-            const mes = fecha.getMonth();
-            let tipo = TIPOS[Math.floor(Math.random() * TIPOS.length)];
+            const mes = fecha.getMonth(); // 0-11
+            const diaSemana = fecha.getDay(); // 0 (Domingo) - 6 (Sábado)
 
-            if ((mes >= 5 && mes <= 7) && Math.random() > 0.6) {
-                tipo = 'reparacion';
+            // Lógica de patrones para que el ML tenga qué predecir:
+
+            // A. Comunas "Heavy": Santiago y Maipu tienen el 50% del tráfico
+            let comuna;
+            const randComuna = Math.random();
+            if (randComuna < 0.3) comuna = 'Santiago';
+            else if (randComuna < 0.5) comuna = 'Maipu';
+            else comuna = COMUNAS[Math.floor(Math.random() * COMUNAS.length)];
+
+            // B. Patrón Semanal:
+            // "Reparacion" ocurre más los Lunes (0) y Viernes (4).
+            // "Instalacion" ocurre más los fines de semana (0 y 6).
+            let tipo = TIPOS[Math.floor(Math.random() * TIPOS.length)];
+            const randTipo = Math.random();
+
+            if (diaSemana === 1 || diaSemana === 5) { // Lunes o Viernes
+                if (randTipo < 0.6) tipo = 'reparacion';
+            } else if (diaSemana === 0 || diaSemana === 6) { // Fin de semana
+                if (randTipo < 0.7) tipo = 'instalacion';
             }
 
-            const comuna = COMUNAS[Math.floor(Math.random() * COMUNAS.length)];
+            // C. Estacionalidad Invierno (Meses 5,6,7): Aumenta Mantenimiento y Reparación
+            if (mes >= 5 && mes <= 7) {
+                if (Math.random() > 0.5) tipo = 'reparacion';
+            }
+
             const prioridad = PRIORIDADES[Math.floor(Math.random() * PRIORIDADES.length)];
 
             await pool.query(
@@ -80,8 +99,8 @@ async function seed() {
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'completada')`,
                 [
                     clienteId,
-                    `Solicitud de prueba ${i + 1}`,
-                    'Generada automáticamente para pruebas de ML',
+                    `Solicitud histórica ${i + 1}`,
+                    'Generada con patrones para ML',
                     'Calle Falsa 123',
                     comuna,
                     'Metropolitana',
