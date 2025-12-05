@@ -20,14 +20,14 @@ const AdminMenu = () => {
       path: '/admin/solicitudes'
     },
     {
-      id: 'clientes', 
+      id: 'clientes',
       title: 'Gestión de Clientes',
       description: 'Administrar clientes registrados',
       icon: 'fas fa-users',
       path: '/admin/clientes'
     },
     {
-      id: 'tecnicos', 
+      id: 'tecnicos',
       title: 'Equipo de Técnicos',
       description: 'Gestionar personal y especialidades',
       icon: 'fas fa-user-cog',
@@ -58,7 +58,11 @@ const AdminMenu = () => {
             <i className="fas fa-shield-alt me-2"></i>
             Panel de Administración INFOSER
           </h1>
-          <button className="logout-btn" onClick={handleLogout}>
+          <button
+            className="logout-btn"
+            onClick={handleLogout}
+            style={{ display: 'flex', background: '#dc3545', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '5px', cursor: 'pointer' }}
+          >
             <i className="fas fa-sign-out-alt me-2"></i>
             Cerrar Sesión
           </button>
@@ -74,7 +78,7 @@ const AdminMenu = () => {
 
         <div className="menu-grid">
           {menuOptions.map(option => (
-            <div 
+            <div
               key={option.id}
               className="menu-card"
               onClick={() => navigate(option.path)}
