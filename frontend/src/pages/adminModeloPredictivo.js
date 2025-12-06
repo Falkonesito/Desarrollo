@@ -3,6 +3,31 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/admin.css';
 import { postForecast, fetchRawData } from '../api/ml';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 // Paleta simple alineada al look INFOSER (azules/grises)
 const theme = {
@@ -480,100 +505,73 @@ export default function AdminModeloPredictivo() {
           </div>
 
           {/* Resultados */}
-          {(daily.length > 0 || pairs.length > 0) && (
-            <div
-              className="menu-card"
-              style={{
-                background: theme.surface,
-                border: `1px solid ${theme.border}`,
-                boxShadow: '0 8px 24px rgba(2,6,23,0.06)',
-                borderRadius: 16,
-                padding: 18
-              }}
-            >
-              <h3 style={{ marginBottom: 12 }}>Resultados</h3>
+          {/* Pair forecast grouped by Service Type */}
+          {pairs.length > 0 && (
+            <>
+              <h4 style={{ color: theme.muted, margin: '24px 0 16px' }}>
+                Proyección por Tipo de Servicio
+              </h4>
 
-              {/* Daily forecast */}
-              {daily.length > 0 && (
-                <>
-                  <h4 style={{ color: theme.muted, marginBottom: 8 }}>Pronóstico diario (total)</h4>
-                  <div style={{ overflowX: 'auto', border: `1px solid ${theme.border}`, borderRadius: 12 }}>
-                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-                      <thead>
-                        <tr style={{ background: '#f8fafc' }}>
-                          <th className="pxy">Fecha</th>
-                          <th className="pxy">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {daily.map((d) => (
-                          <tr key={d.date} style={{ borderTop: `1px solid ${theme.border}` }}>
-                            <td className="pxy">{d.date}</td>
-                            <td className="pxy">{Number(d.total).toFixed(2)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              )}
+              {/* Generate charts for each Service Type */}
+              {(() => {
+                // 1. Group by Service Type
+                const byService = {};
+                pairs.forEach(p => {
+                  const s = p.tipo_servicio || 'Otros';
+                  if (!byService[s]) byService[s] = [];
+                  byService[s].push(p);
+                });
 
-              {/* Pair forecast */}
-              {pairs.length > 0 && (
-                <>
-                  <h4 style={{ color: theme.muted, margin: '18px 0 8px' }}>
-                    Pronóstico por par (comuna / tipo_servicio)
-                  </h4>
-                  <div style={{ display: 'grid', gap: 16 }}>
-                    {pairs.map((p, i) => {
-                      const nextDays = Array.isArray(p.next_days) ? p.next_days : [];
-                      return (
-                        <div
-                          key={`${p.comuna || 'nocom'}-${p.tipo_servicio || 'noserv'}-${i}`}
-                          style={{
-                            border: `1px solid ${theme.border}`,
-                            borderRadius: 12,
-                            padding: 12,
-                            background: '#fbfdff',
-                          }}
-                        >
-                          <div style={{ marginBottom: 8 }}>
-                            <strong>{p.comuna || '(sin comuna)'}</strong> — <em>{p.tipo_servicio || '(sin tipo)'}</em>
-                          </div>
-                          <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-                              <thead>
-                                <tr style={{ background: '#f8fafc' }}>
-                                  {nextDays.map((_, idx2) => (
-                                    <th key={idx2} className="pxy">D+{idx2 + 1}</th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr>
-                                  {nextDays.map((v, idx2) => (
-                                    <td key={idx2} className="pxy">{Number(v).toFixed(2)}</td>
-                                  ))}
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
+                // 2. Render a Chart for each service group
+                return Object.entries(byService).map(([serviceName, groupPairs]) => {
+                  // Prepare Labels (D+1, D+2...)
+                  const daysCount = groupPairs[0]?.next_days?.length || 0;
+                  const labels = Array.from({ length: daysCount }, (_, i) => `Día +${i + 1}`);
+
+                  // Colors for different comunas (simple rotation)
+                  const colors = [
+                    '#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545',
+                    '#fd7e14', '#ffc107', '#198754', '#20c997', '#0dcaf0'
+                  ];
+
+                  const data = {
+                    labels,
+                    datasets: groupPairs.map((p, idx) => ({
+                      label: p.comuna || 'General',
+                      data: p.next_days,
+                      backgroundColor: colors[idx % colors.length],
+                      borderRadius: 4,
+                    })),
+                  };
+
+                  const options = {
+                    responsive: true,
+                    plugins: {
+                      legend: { position: 'top' },
+                      title: { display: true, text: `Pronóstico: ${serviceName.toUpperCase()}` },
+                    },
+                    scales: {
+                      y: { beginAtZero: true, title: { display: true, text: 'Solicitudes estimadas' } }
+                    }
+                  };
+
+                  return (
+                    <div key={serviceName} className="menu-card" style={{ marginBottom: 24, padding: 16, border: `1px solid ${theme.border}`, borderRadius: 12 }}>
+                      <Bar data={data} options={options} />
+                    </div>
+                  );
+                });
+              })()}
+            </>
           )}
         </main>
       </div>
 
       {/* Estilos mínimos locales para padding de celdas */}
-      <style>{`
+      < style > {`
         .pxy { padding: 10px 14px; text-align: left; }
         .sidebar-btn:hover { background-color: #f1f5f9 !important; }
-      `}</style>
-    </div>
+      `}</style >
+    </div >
   );
 }
