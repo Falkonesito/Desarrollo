@@ -514,7 +514,7 @@ export default function AdminModeloPredictivo() {
 
               {/* Generate charts for each Service Type */}
               {(() => {
-                // 1. Group by Service Type
+                // 1. Group by Service Type (and prioritize)
                 const byService = {};
                 pairs.forEach(p => {
                   const s = p.tipo_servicio || 'Otros';
@@ -524,9 +524,17 @@ export default function AdminModeloPredictivo() {
 
                 // 2. Render a Chart for each service group
                 return Object.entries(byService).map(([serviceName, groupPairs]) => {
-                  // Prepare Labels (D+1, D+2...)
+                  // Prepare Labels (Real Dates starting from Tomorrow)
                   const daysCount = groupPairs[0]?.next_days?.length || 0;
-                  const labels = Array.from({ length: daysCount }, (_, i) => `Día +${i + 1}`);
+
+                  const labels = Array.from({ length: daysCount }, (_, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + i + 1);
+                    // Format: "Lun 12/05"
+                    const weekday = d.toLocaleDateString('es-CL', { weekday: 'short' });
+                    const dayMonth = d.toLocaleDateString('es-CL', { day: 'numeric', month: 'numeric' });
+                    return `${weekday} ${dayMonth}`;
+                  });
 
                   // Colors for different comunas (simple rotation)
                   const colors = [
