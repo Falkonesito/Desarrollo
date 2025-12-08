@@ -1,8 +1,7 @@
 // backend/src/services/ml.js
 // Proxy al servicio de ML en Python (FastAPI)
 
-// URL del servicio Python (por defecto localhost:8000)
-// URL del servicio Python (por defecto la pública de Render si no hay env)
+// URL del servicio Python (siempre usar la URL pública de Render)
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'https://infoser-ml-service.onrender.com';
 
 /**
