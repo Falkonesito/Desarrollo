@@ -112,9 +112,41 @@ def forecast(req: ForecastRequest):
                 next_vals.append(pred)
                 
         else:
-            # Pocos datos: Usar promedio simple de lo que haya
-            avg = sum(values) / n
-            next_vals = [avg] * horizon
+            # Pocos datos: usar promedio con tendencia y variabilidad
+            # Establecer un mínimo razonable (al menos 2 solicitudes)
+            avg = max(2.0, sum(values) / n)
+            
+            # Detectar tendencia (comparar últimos datos vs primeros)
+            if n >= 6:
+                recent_avg = sum(values[-3:]) / 3
+                old_avg = sum(values[:3]) / 3
+                trend = (recent_avg - old_avg) / 3  # Cambio promedio por día
+            elif n >= 3:
+                # Con menos datos, usar tendencia más conservadora
+                recent_avg = sum(values[-2:]) / 2
+                old_avg = sum(values[:2]) / 2
+                trend = (recent_avg - old_avg) / 2
+            else:
+                # Muy pocos datos: asumir crecimiento leve
+                trend = 0.15
+            
+            # Patrón semanal realista (factores por día: Lun-Dom)
+            # Más solicitudes al inicio de semana, menos en fin de semana
+            weekly_pattern = [1.3, 1.2, 1.0, 1.0, 1.1, 0.8, 0.6]
+            
+            # Generar predicciones con tendencia y patrón semanal
+            last_date = dates[-1]
+            for i in range(horizon):
+                # Base con tendencia
+                base = avg + (trend * i)
+                
+                # Aplicar patrón semanal
+                future_date = last_date + dt.timedelta(days=i + 1)
+                weekday = future_date.weekday()
+                pred = base * weekly_pattern[weekday]
+                
+                # Asegurar mínimo de 1 solicitud
+                next_vals.append(max(1.0, pred))
 
         # Redondear a enteros y asegurar no negativos
         final_vals = [int(round(max(0.0, v))) for v in next_vals]
