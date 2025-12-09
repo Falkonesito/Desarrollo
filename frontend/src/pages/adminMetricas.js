@@ -488,7 +488,7 @@ const AdminMetricas = () => {
                         <td>#{s.id}</td>
                         <td>{s.titulo}</td>
                         <td>{getStatusBadge(s.estado_actual)}</td>
-                        <td>{new Date(s.fecha_creacion).toLocaleDateString()}</td>
+                        <td>{new Date(s.fecha_solicitud).toLocaleDateString()}</td>
                       </tr>
                     ))
                   ) : (
