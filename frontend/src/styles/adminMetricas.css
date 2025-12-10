@@ -1,8 +1,8 @@
-/* ===== ESTILOS DASHBOARD ANALYTICS INFOSER ===== */
+/* ===== ESTILOS DASHBOARD ANALYTICS INFOSER - VERSIÓN FINAL CORREGIDA ===== */
 
-/* Contenedor Principal */
+/* 1. Contenedor Principal */
 .admin-metricas-container {
-    font-family: Inter, Segoe UI, sans-serif;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
     background: #f7fafc;
     min-height: 100vh;
     color: #2d3748;
@@ -10,7 +10,7 @@
     flex-direction: column;
 }
 
-/* Header */
+/* 2. Header */
 .admin-metricas-header {
     background: #ffffff;
     padding: 1rem 2rem;
@@ -41,6 +41,7 @@
     gap: 0.5rem;
 }
 
+/* Botón Volver del Header */
 .btn-volver {
     background: transparent;
     border: 1px solid #e2e8f0;
@@ -52,6 +53,7 @@
     transition: all 0.2s;
     display: flex;
     align-items: center;
+    gap: 0.5rem;
 }
 
 .btn-volver:hover {
@@ -93,115 +95,74 @@
     color: #e53e3e;
 }
 
-/* Layout Principal */
+/* 3. Layout (Sidebar + Contenido) */
 .admin-metricas-layout {
     display: flex;
     flex: 1;
+    overflow: hidden;
+    /* Evita scroll doble */
 }
 
-/* Sidebar */
+/* 4. Sidebar (Menú Lateral) - ARREGLADO */
 .admin-metricas-sidebar {
-    width: 240px;
+    width: 260px;
+    /* Un poco más ancho para que quepa el texto */
     background: #ffffff;
     border-right: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
+    padding: 1.5rem 1rem;
+    flex-shrink: 0;
 }
 
-.sidebar-sticky {
-    position: sticky;
-    top: 0;
-    padding: 1.5rem;
-    height: calc(100vh - 70px);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-.sidebar-nav {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.nav-item {
-    margin-bottom: 0.5rem;
-}
-
-.nav-link {
+/* Estilos de los botones del menú (ESTO FALTABA) */
+.sidebar-btn {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1rem;
+    gap: 12px;
+    /* Espacio entre icono y texto */
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    background: transparent;
     color: #718096;
-    text-decoration: none;
-    border-radius: 8px;
-    transition: all 0.2s;
+    font-size: 0.95rem;
     font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+    /* Para evitar saltos raros */
 }
 
-.nav-link:hover {
-    background: #f7fafc;
+.sidebar-btn:hover {
+    background-color: #f7fafc;
     color: #1a365d;
 }
 
-.nav-item.active .nav-link {
-    background: #ebf8ff;
+.sidebar-btn.active {
+    background-color: #ebf8ff;
     color: #3182ce;
+    font-weight: 600;
 }
 
-.nav-link i {
+.sidebar-btn i {
     width: 24px;
+    /* Ancho fijo para alinear iconos */
     text-align: center;
+    font-size: 1.1rem;
 }
 
-.sidebar-summary {
-    background: #f7fafc;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-}
-
-.sidebar-summary h6 {
-    margin: 0 0 0.75rem 0;
-    font-size: 0.85rem;
-    color: #718096;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.summary-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.summary-item {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.9rem;
-    color: #2d3748;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-}
-
-.status-dot.online {
-    background-color: #38a169;
-    box-shadow: 0 0 0 2px rgba(56, 161, 105, 0.2);
-}
-
-/* Contenido Principal */
+/* 5. Contenido Principal */
 .admin-metricas-content {
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
 }
 
-/* Barra de Filtros */
+/* 6. Barra de Filtros */
 .filters-bar {
     background: #ffffff;
     padding: 1rem 1.5rem;
@@ -212,6 +173,7 @@
     gap: 1.5rem;
     margin-bottom: 2rem;
     flex-wrap: wrap;
+    /* Permite bajar si no cabe, pero intenta mantener línea */
 }
 
 .filter-group {
@@ -224,24 +186,18 @@
     font-size: 0.9rem;
     font-weight: 600;
     color: #718096;
+    white-space: nowrap;
 }
 
 .filter-select {
-    padding: 0.4rem 2rem 0.4rem 0.8rem;
+    padding: 0.5rem 2rem 0.5rem 1rem;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     background-color: #f7fafc;
     color: #2d3748;
     font-size: 0.9rem;
     cursor: pointer;
-    transition: border-color 0.2s;
-    min-width: 160px;
-}
-
-.filter-select:focus {
-    outline: none;
-    border-color: #3182ce;
-    background-color: #ffffff;
+    min-width: 140px;
 }
 
 .btn-refresh {
@@ -256,24 +212,20 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
     box-shadow: 0 2px 4px rgba(49, 130, 206, 0.3);
 }
 
 .btn-refresh:hover {
     background: #2b6cb0;
     transform: rotate(180deg);
+    transition: transform 0.3s;
 }
 
-.btn-refresh:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-/* KPIs Grid */
+/* 7. KPIs Grid - ARREGLADO PARA SER PARALELO */
 .kpis-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    /* En PC: 4 columnas iguales para que estén todos en una fila */
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
@@ -285,24 +237,20 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
     display: flex;
     align-items: center;
-    gap: 1.5rem;
-    transition: transform 0.2s, box-shadow 0.2s;
+    gap: 1rem;
     border: 1px solid transparent;
-}
-
-.kpi-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08);
+    min-width: 0;
+    /* Evita desbordes flex */
 }
 
 .kpi-icon-wrapper {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     flex-shrink: 0;
 }
 
@@ -327,21 +275,20 @@
 }
 
 .kpi-data h3 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
     color: #2d3748;
-    line-height: 1.2;
 }
 
 .kpi-data p {
     margin: 0.25rem 0 0 0;
     color: #718096;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
 }
 
-/* Gráficos Grid - AJUSTE FINAL CENTRADO */
+/* 8. Gráficos Grid - DISEÑO 2 ARRIBA, 1 ABAJO */
 .charts-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -360,44 +307,50 @@
     flex-direction: column;
 }
 
+/* Gráfico de Línea (Arriba Izquierda) */
 .chart-container.main-chart {
     grid-column: 1;
     grid-row: 1;
 }
 
+/* Gráfico de Barras (Arriba Derecha) */
 .chart-container.side-chart {
     grid-column: 2;
     grid-row: 1;
 }
 
-/* AQUÍ ESTÁ EL TRUCO PARA QUE SE VEA BIEN: */
+/* Gráfico de Pastel (Abajo Centrado) */
 .chart-container.equipment-chart {
     grid-column: 1 / -1;
+    /* Ocupa todo el ancho */
     grid-row: 2;
-
-    /* Limitamos el ancho para que no se vea gigante */
     max-width: 500px;
-
-    /* Centramos el bloque en la pantalla */
+    /* Limita ancho para que se vea elegante */
     margin: 0 auto;
-
-    /* Centramos el contenido interno */
-    align-items: center;
+    /* Centra el contenedor */
     width: 100%;
+    align-items: center;
 }
-
 
 .chart-header-simple {
     margin-bottom: 1.5rem;
+    width: 100%;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    width: 100%;
+}
+
+.chart-header-simple h5 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2d3748;
 }
 
 .chart-canvas-wrapper {
     position: relative;
     width: 100%;
+    /* Altura consistente */
+    min-height: 300px;
 }
 
 .no-data {
@@ -406,12 +359,12 @@
     align-items: center;
     justify-content: center;
     color: #718096;
-    font-style: italic;
     background: #f7fafc;
     border-radius: 8px;
+    min-height: 200px;
 }
 
-/* Tabla Recientes */
+/* 9. Tabla Recientes */
 .recent-table-container {
     background: #ffffff;
     border-radius: 12px;
@@ -440,16 +393,14 @@
 .table {
     width: 100%;
     border-collapse: collapse;
-    margin: 0;
 }
 
 .table th {
     background: #f7fafc;
     color: #718096;
     font-weight: 600;
-    text-transform: uppercase;
     font-size: 0.75rem;
-    letter-spacing: 0.5px;
+    text-transform: uppercase;
     padding: 1rem 1.5rem;
     text-align: left;
     border-bottom: 1px solid #e2e8f0;
@@ -463,21 +414,12 @@
     vertical-align: middle;
 }
 
-.table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.table-hover tbody tr:hover {
-    background-color: #f7fafc;
-}
-
-/* Badges */
+/* 10. Badges */
 .badge {
     padding: 0.35em 0.8em;
     font-size: 0.75rem;
     font-weight: 600;
     border-radius: 20px;
-    text-transform: capitalize;
     display: inline-block;
 }
 
@@ -506,8 +448,18 @@
     color: #4a5568;
 }
 
-/* Responsive */
+/* 11. Responsive */
+@media (max-width: 1200px) {
+
+    /* En pantallas medianas (laptops pequeñas), bajamos a 2 columnas de KPIs */
+    .kpis-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 1024px) {
+
+    /* Gráficos uno debajo del otro en tablets */
     .charts-grid {
         grid-template-columns: 1fr;
     }
@@ -527,6 +479,16 @@
         grid-row: 3;
         max-width: 100%;
     }
+
+    .filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-refresh {
+        width: 100%;
+        border-radius: 6px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -536,28 +498,13 @@
 
     .admin-metricas-sidebar {
         width: 100%;
-        height: auto;
         border-right: none;
         border-bottom: 1px solid #e2e8f0;
-    }
-
-    .sidebar-sticky {
-        height: auto;
         padding: 1rem;
     }
 
-    .sidebar-summary {
-        display: none;
-    }
-
-    .filters-bar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 1rem;
-    }
-
-    .btn-refresh {
-        width: 100%;
-        border-radius: 6px;
+    .kpis-grid {
+        grid-template-columns: 1fr;
+        /* 1 columna en móvil */
     }
 }
