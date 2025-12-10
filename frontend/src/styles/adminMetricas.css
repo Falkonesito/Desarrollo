@@ -341,10 +341,9 @@
     font-weight: 500;
 }
 
-/* Gráficos Grid - AJUSTE FINAL PARA 3 GRÁFICOS */
+/* Gráficos Grid - AJUSTE FINAL CENTRADO */
 .charts-grid {
     display: grid;
-    /* Línea y Barras arriba (1fr 1fr), Pastel abajo (ocupa la segunda fila) */
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto;
     gap: 1.5rem;
@@ -357,23 +356,34 @@
     padding: 1.5rem;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
     border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
 }
 
 .chart-container.main-chart {
-    grid-column: 1; /* Fila 1, Columna 1 (Líneas) */
+    grid-column: 1;
     grid-row: 1;
 }
 
 .chart-container.side-chart {
-    grid-column: 2; /* Fila 1, Columna 2 (Barras) */
+    grid-column: 2;
     grid-row: 1;
 }
 
+/* AQUÍ ESTÁ EL TRUCO PARA QUE SE VEA BIEN: */
 .chart-container.equipment-chart {
-    grid-column: 1 / -1; /* Ocupa TODA la segunda fila */
+    grid-column: 1 / -1;
     grid-row: 2;
-    /* max-width y margin: 0 auto; ahora funcionan para centrar el contenido interno */
-    margin: 0 auto; 
+
+    /* Limitamos el ancho para que no se vea gigante */
+    max-width: 500px;
+
+    /* Centramos el bloque en la pantalla */
+    margin: 0 auto;
+
+    /* Centramos el contenido interno */
+    align-items: center;
+    width: 100%;
 }
 
 
@@ -382,13 +392,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.chart-header-simple h5 {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #2d3748;
+    width: 100%;
 }
 
 .chart-canvas-wrapper {
@@ -505,7 +509,6 @@
 /* Responsive */
 @media (max-width: 1024px) {
     .charts-grid {
-        /* En pantallas medianas/pequeñas: Línea y Barras van en la primera fila, Pastel en la segunda */
         grid-template-columns: 1fr;
     }
 
@@ -518,7 +521,7 @@
         grid-column: 1;
         grid-row: 2;
     }
-    
+
     .chart-container.equipment-chart {
         grid-column: 1;
         grid-row: 3;
