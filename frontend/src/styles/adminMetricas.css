@@ -341,9 +341,10 @@
     font-weight: 500;
 }
 
-/* Gráficos Grid - ACTUALIZADO PARA 3 GRÁFICOS */
+/* Gráficos Grid - AJUSTE FINAL PARA 3 GRÁFICOS */
 .charts-grid {
     display: grid;
+    /* Línea y Barras arriba (1fr 1fr), Pastel abajo (ocupa la segunda fila) */
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto;
     gap: 1.5rem;
@@ -359,21 +360,22 @@
 }
 
 .chart-container.main-chart {
-    grid-column: 1;
+    grid-column: 1; /* Fila 1, Columna 1 (Líneas) */
     grid-row: 1;
 }
 
 .chart-container.side-chart {
-    grid-column: 2;
+    grid-column: 2; /* Fila 1, Columna 2 (Barras) */
     grid-row: 1;
 }
 
 .chart-container.equipment-chart {
-    grid-column: 1 / -1;
+    grid-column: 1 / -1; /* Ocupa TODA la segunda fila */
     grid-row: 2;
-    max-width: 50%; /* Centra y limita el ancho del Pie Chart en la fila inferior */
-    margin: 0 auto;
+    /* max-width y margin: 0 auto; ahora funcionan para centrar el contenido interno */
+    margin: 0 auto; 
 }
+
 
 .chart-header-simple {
     margin-bottom: 1.5rem;
