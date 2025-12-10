@@ -1141,6 +1141,7 @@ async function obtenerMetricasAdmin(req, res) {
       rPorDia,
       rRendimiento,
       rRecientes,
+      rEquipos,
     ] = await Promise.all([
       pool.query('SELECT * FROM vista_dashboard'),
       pool.query('SELECT * FROM vista_solicitudes_por_dia ORDER BY fecha'),
@@ -1159,6 +1160,22 @@ async function obtenerMetricasAdmin(req, res) {
         ORDER BY fecha_solicitud DESC
         LIMIT 15
       `),
+      // Nueva consulta: Equipos más solicitados
+      pool.query(`
+        SELECT 
+          equipo,
+          COUNT(*) as cantidad
+        FROM (
+          SELECT UNNEST(string_to_array(equipos_solicitados, ',')) as equipo
+          FROM solicitudes
+          WHERE equipos_solicitados IS NOT NULL 
+            AND equipos_solicitados != ''
+        ) AS equipos_expandidos
+        WHERE equipo IS NOT NULL AND TRIM(equipo) != ''
+        GROUP BY equipo
+        ORDER BY cantidad DESC
+        LIMIT 10
+      `),
     ]);
 
     const dashboard = rDashboard.rows[0] || {
@@ -1174,6 +1191,7 @@ async function obtenerMetricasAdmin(req, res) {
       solicitudes_por_dia: rPorDia.rows,
       rendimiento_tecnicos: rRendimiento.rows,
       solicitudes_recientes: rRecientes.rows,
+      equipos_mas_solicitados: rEquipos.rows,
     });
   } catch (error) {
     console.error('Error en métricas admin:', error);

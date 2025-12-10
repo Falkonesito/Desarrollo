@@ -26,8 +26,17 @@ async function seed() {
     const pool = new Pool(poolConfig);
 
     try {
-        console.log('🌱 Iniciando sembrado de datos...');
-        console.log(`🔌 Conectando a DB: ${process.env.DB_HOST || 'localhost'} como ${process.env.DB_USER || 'postgres'}`);
+        console.log('🌱 Iniciando script de sembrado...');
+
+        if (process.env.DATABASE_URL) {
+            console.log('✅ DATABASE_URL detectada. Conectando a CLOUD (Render)...');
+            // Ocultar credenciales
+            console.log(`📡 Endpoint: ${process.env.DATABASE_URL.split('@')[1]}`);
+        } else {
+            console.log('⚠️  DATABASE_URL NO detectada. Conectando a LOCALHOST.');
+            console.log(`🔌 Host: ${process.env.DB_HOST || 'localhost'}`);
+            console.log('📝 Nota: Si quieres subir a la nube, asegúrate de tener DATABASE_URL en backend/.env');
+        }
 
         // 1. Crear o buscar cliente de prueba
         const email = 'cliente_test_ml@infoser.cl';
@@ -106,7 +115,7 @@ async function seed() {
                     'Metropolitana',
                     tipo,
                     prioridad,
-                    fecha
+                    fecha.toISOString()  // Convertir a string ISO para PostgreSQL
                 ]
             );
 

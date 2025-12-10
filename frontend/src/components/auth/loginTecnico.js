@@ -75,6 +75,6 @@ return (
     </div>
   </div>
 );
-};
+
 
 export default LoginTecnico;
