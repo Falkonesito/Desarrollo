@@ -1,5 +1,5 @@
 // frontend/src/pages/adminMetricas.js
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/adminMetricas.css';
 import { api } from '../utils/api';
@@ -18,204 +18,543 @@ import {
 } from 'chart.js';
 import { Line, Bar, Pie } from 'react-chartjs-2';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler);
+// Registrar componentes de Chart.js
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    ArcElement,
+    Title,
+    Tooltip,
+    Legend,
+    Filler
+);
 
 const AdminMetricas = () => {
     const navigate = useNavigate();
 
-    // Estados
+    // Filtros
+    const [filtroTiempo, setFiltroTiempo] = useState('30-dias');
+    const [filtroComuna, setFiltroComuna] = useState('todas');
+    const [filtroServicio, setFiltroServicio] = useState('todos');
+
+    // Estado de carga / error
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [filtroTiempo, setFiltroTiempo] = useState('30-dias');
 
-    // Datos
-    const [kpis, setKpis] = useState({ totalSolicitudes: 0, completadas: 0, pendientes: 0, enProgreso: 0 });
-    const [porDia, setPorDia] = useState([]);
-    const [rendimiento, setRendimiento] = useState([]);
-    const [equipos, setEquipos] = useState([]);
-    const [recientes, setRecientes] = useState([]);
+    // Datos que vienen del backend
+    const [kpis, setKpis] = useState({
+        totalSolicitudes: 0,
+        completadas: 0,
+        pendientes: 0,
+        enProgreso: 0,
+    });
 
-    // Carga de datos
-    useEffect(() => {
-        (async () => {
-            try {
-                setLoading(true);
-                const data = await api.get('/metricas/dashboard', {
+    const [porDia, setPorDia] = useState([]); // vista_solicitudes_por_dia
+    const [rendimiento, setRendimiento] = useState([]); // vista_rendimiento_tecnicos
+    const [recientes, setRecientes] = useState([]); // vista_solicitudes_recientes
+    const [equipos, setEquipos] = useState([]); // equipos_mas_solicitados
+
+    // NUEVO: datos crudos para filtrar en cliente (sin PII)
+    const [raw, setRaw] = useState([]);
+
+    // Cargar métricas desde el backend
+    const cargarMetricas = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // Pedimos dashboard (global) + crudo (para filtrar en front)
+            const [dataDash, dataRaw] = await Promise.all([
+                api.get('/metricas/dashboard', {
+                    auth: true,
+                    query: {
+                        rango: filtroTiempo,
+                        comuna: filtroComuna === 'todas' ? '' : filtroComuna,
+                        tipo_servicio: filtroServicio === 'todos' ? '' : filtroServicio,
+                    },
+                }),
+                api.get('/metricas/raw-solicitudes', {
                     auth: true,
                     query: { rango: filtroTiempo },
-                });
-                const d = data.dashboard || {};
-                setKpis({
-                    totalSolicitudes: d.total_solicitudes || 0,
-                    completadas: d.completadas || 0,
-                    pendientes: d.pendientes || 0,
-                    enProgreso: d.en_progreso || 0,
-                });
-                setPorDia(d.solicitudes_por_dia || []);
-                setRendimiento(d.rendimiento_tecnicos || []);
-                setEquipos(d.equipos_mas_solicitados || []);
-                setRecientes(d.solicitudes_recientes || []);
-            } catch (err) {
-                console.error(err);
-                setError('Error cargando métricas');
-            } finally {
-                setLoading(false);
-            }
-        })();
-    }, [filtroTiempo]);
+                }),
+            ]);
 
-    // Procesamiento Gráficos
-    const lineData = useMemo(() => ({
-        labels: porDia.map(d => d.fecha),
-        datasets: [{
-            label: 'Solicitudes',
-            data: porDia.map(d => d.total_solicitudes),
-            borderColor: '#3182ce',
-            backgroundColor: 'rgba(49, 130, 206, 0.1)',
-            fill: true,
-            tension: 0.3
-        }]
-    }), [porDia]);
+            const dashboard = dataDash.dashboard || {};
 
-    const barData = useMemo(() => ({
-        labels: rendimiento.map(t => t.tecnico_nombre),
-        datasets: [{
-            label: 'Completadas',
-            data: rendimiento.map(t => t.completadas),
-            backgroundColor: '#38a169',
-            borderRadius: 4
-        }]
-    }), [rendimiento]);
+            setKpis({
+                totalSolicitudes: dashboard.total_solicitudes || 0,
+                completadas: dashboard.completadas || 0,
+                pendientes: dashboard.pendientes || 0,
+                enProgreso: dashboard.en_progreso || 0,
+            });
 
-    const pieData = useMemo(() => ({
-        labels: equipos.map(e => e.equipo),
-        datasets: [{
-            data: equipos.map(e => e.cantidad),
-            backgroundColor: ['#3182ce', '#38a169', '#dd6b20', '#e53e3e', '#805ad5', '#d69e2e'],
-        }]
-    }), [equipos]);
+            setPorDia(dataDash.solicitudes_por_dia || []);
+            setRendimiento(dataDash.rendimiento_tecnicos || []);
+            setRecientes(dataDash.solicitudes_recientes || []);
+            setEquipos(dataDash.equipos_mas_solicitados || []);
 
-    // Opciones limpias
-    const commonOptions = {
+            // Guardamos el crudo
+            setRaw(dataRaw.rows || []);
+        } catch (err) {
+            console.error('Error cargando métricas:', err);
+            setError(err.message || 'Error obteniendo métricas del dashboard');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        cargarMetricas();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Filtrado local (client-side) sobre "raw"
+    const filtradas = React.useMemo(() => {
+        const c = filtroComuna === 'todas' ? '' : (filtroComuna || '').toLowerCase();
+        const s = filtroServicio === 'todos' ? '' : (filtroServicio || '');
+        return (raw || []).filter(r => (c ? r.comuna === c : true) && (s ? r.tipo_servicio === s : true));
+    }, [raw, filtroComuna, filtroServicio]);
+
+    // Serie por día filtrada (para el gráfico de evolución)
+    const porDiaFiltrado = React.useMemo(() => {
+        const map = new Map();
+        for (const r of filtradas) {
+            if (!map.has(r.fecha)) map.set(r.fecha, { fecha: r.fecha, total_solicitudes: 0, completadas: 0 });
+            const o = map.get(r.fecha);
+            o.total_solicitudes++;
+            if (r.estado === 'completada') o.completadas++;
+        }
+        return Array.from(map.values()).sort((a, b) => a.fecha.localeCompare(b.fecha));
+    }, [filtradas]);
+
+    // Pie chart de equipos
+    const pieData = {
+        labels: equipos.map((e) => e.equipo),
+        datasets: [
+            {
+                data: equipos.map((e) => e.cantidad),
+                backgroundColor: [
+                    '#3182ce',
+                    '#38a169',
+                    '#d69e2e',
+                    '#e53e3e',
+                    '#805ad5',
+                    '#d53f8c',
+                    '#319795',
+                    '#dd6b20',
+                    '#718096',
+                    '#2b6cb0',
+                ],
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    const pieOptions = {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom' } },
-        scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f7fafc' } } }
+        plugins: {
+            legend: { position: 'right' },
+            tooltip: {
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                titleColor: '#2d3748',
+                bodyColor: '#4a5568',
+                borderColor: '#e2e8f0',
+                borderWidth: 1,
+            },
+        },
     };
-    const pieOptions = { ...commonOptions, scales: {} }; // Pie no usa escalas XY
+
+    const solicitudesAbiertas = kpis.pendientes + kpis.enProgreso;
+
+    // --- Configuración de Gráficos ---
+
+    // 1. Gráfico de Líneas (Evolución)
+    const lineChartData = {
+        labels: porDiaFiltrado.map(d => d.fecha),
+        datasets: [
+            {
+                label: 'Solicitudes Totales',
+                data: porDiaFiltrado.map(d => d.total_solicitudes),
+                borderColor: '#3182ce', // accent-blue
+                backgroundColor: 'rgba(49, 130, 206, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+            },
+            {
+                label: 'Completadas',
+                data: porDiaFiltrado.map(d => d.completadas),
+                borderColor: '#38a169', // success
+                backgroundColor: 'rgba(56, 161, 105, 0.0)',
+                borderDash: [5, 5],
+                tension: 0.4,
+                pointRadius: 3,
+            }
+        ],
+    };
+
+    const lineChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    usePointStyle: true,
+                    font: { family: "'Segoe UI', sans-serif", size: 12 }
+                }
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                titleColor: '#2d3748',
+                bodyColor: '#4a5568',
+                borderColor: '#e2e8f0',
+                borderWidth: 1,
+                padding: 10,
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: '#f7fafc' },
+                ticks: { font: { size: 11 }, color: '#718096' }
+            },
+            x: {
+                grid: { display: false },
+                ticks: { font: { size: 11 }, color: '#718096', maxRotation: 45, minRotation: 45 }
+            }
+        }
+    };
+
+    // 2. Gráfico de Barras Horizontal (Técnicos)
+    const barChartData = {
+        labels: rendimiento.map(t => t.tecnico_nombre),
+        datasets: [
+            {
+                label: 'Completadas',
+                data: rendimiento.map(t => t.completadas),
+                backgroundColor: '#38a169',
+                borderRadius: 4,
+                barPercentage: 0.7,
+            },
+            {
+                label: 'Total Asignadas',
+                data: rendimiento.map(t => t.total_solicitudes),
+                backgroundColor: '#e2e8f0',
+                borderRadius: 4,
+                barPercentage: 0.7,
+                // Hacemos que las barras se superpongan un poco visualmente si se desea, 
+                // pero Chart.js por defecto las pone al lado o apiladas. 
+                // Para "progreso", mejor dejarlas agrupadas o usar un truco de stack si se quiere.
+                // Aquí las dejaremos agrupadas para comparar.
+            }
+        ]
+    };
+
+    const barChartOptions = {
+        indexAxis: 'y', // Horizontal
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                titleColor: '#2d3748',
+                bodyColor: '#4a5568',
+                borderColor: '#e2e8f0',
+                borderWidth: 1,
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: true,
+                grid: { color: '#f7fafc' }
+            },
+            y: {
+                grid: { display: false }
+            }
+        }
+    };
+
+    // Helper para status badge
+    const getStatusBadge = (status) => {
+        switch (status) {
+            case 'completada': return <span className="badge badge-success">Completada</span>;
+            case 'en_proceso': return <span className="badge badge-warning">En Progreso</span>;
+            case 'asignada': return <span className="badge badge-info">Asignada</span>;
+            case 'pendiente': return <span className="badge badge-danger">Pendiente</span>;
+            default: return <span className="badge badge-secondary">{status}</span>;
+        }
+    };
 
     return (
         <div className="admin-metricas-container">
-            {/* Header idéntico */}
             <header className="admin-metricas-header">
                 <div className="header-content">
                     <div className="header-left">
-                        <button className="btn-volver" onClick={() => navigate('/admin/menu')}>
-                            <i className="fas fa-arrow-left"></i> Volver
+                        <button
+                            className="btn-volver"
+                            onClick={() => navigate('/admin/menu')}
+                        >
+                            <i className="fas fa-arrow-left me-2"></i>
+                            Volver
                         </button>
-                        <h1><i className="fas fa-chart-line"></i> Métricas</h1>
+                        <h1>
+                            <i className="fas fa-chart-pie me-2"></i>
+                            Dashboard Administrativo
+                        </h1>
                     </div>
-                    <div className="admin-info">
-                        <span className="admin-badge">Administrador</span>
+                    <div className="header-actions">
+                        <div className="admin-info">
+                            <span className="admin-badge">Admin</span>
+                            <button
+                                className="logout-btn"
+                                onClick={() => (window.location.href = '/')}
+                            >
+                                <i className="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
 
             <div className="admin-metricas-layout">
-                {/* Sidebar idéntico */}
                 <nav className="admin-metricas-sidebar">
-                    <button className="sidebar-btn" onClick={() => navigate('/admin/menu')}><i className="fas fa-home"></i> Menú</button>
-                    <button className="sidebar-btn" onClick={() => navigate('/admin/solicitudes')}><i className="fas fa-tools"></i> Solicitudes</button>
-                    <button className="sidebar-btn" onClick={() => navigate('/admin/clientes')}><i className="fas fa-users"></i> Clientes</button>
-                    <button className="sidebar-btn" onClick={() => navigate('/admin/tecnicos')}><i className="fas fa-user-cog"></i> Técnicos</button>
-                    <button className="sidebar-btn active"><i className="fas fa-chart-line"></i> Métricas</button>
-                    <button className="sidebar-btn" onClick={() => navigate('/admin/modelo-predictivo')}><i className="fas fa-brain"></i> IA Predictiva</button>
+                    <button
+                        className="sidebar-btn"
+                        onClick={() => navigate('/admin/menu')}
+                    >
+                        <i className="fas fa-home"></i>
+                        Menú Principal
+                    </button>
+                    <button
+                        className="sidebar-btn"
+                        onClick={() => navigate('/admin/solicitudes')}
+                    >
+                        <i className="fas fa-tools"></i>
+                        📋 Solicitudes
+                    </button>
+                    <button
+                        className="sidebar-btn"
+                        onClick={() => navigate('/admin/clientes')}
+                    >
+                        <i className="fas fa-users"></i>
+                        👥 Clientes
+                    </button>
+                    <button
+                        className="sidebar-btn"
+                        onClick={() => navigate('/admin/tecnicos')}
+                    >
+                        <i className="fas fa-user-cog"></i>
+                        👨‍💻 Técnicos
+                    </button>
+                    <button className="sidebar-btn active">
+                        <i className="fas fa-chart-line"></i>
+                        📈 Métricas
+                    </button>
+                    <button
+                        className="sidebar-btn"
+                        onClick={() => navigate('/admin/modelo-predictivo')}
+                    >
+                        <i className="fas fa-brain"></i>
+                        🔮 Modelo Predictivo
+                    </button>
                 </nav>
 
                 <main className="admin-metricas-content">
-                    {/* Header contenido */}
-                    <div className="content-header">
-                        <h2>Resumen General</h2>
-                        <div className="time-filter">
-                            <select value={filtroTiempo} onChange={e => setFiltroTiempo(e.target.value)} className="clean-select">
+                    {error && (
+                        <div className="alert alert-danger">
+                            <i className="fas fa-exclamation-circle me-2"></i>
+                            {error}
+                        </div>
+                    )}
+
+                    {/* Barra de Filtros */}
+                    <div className="filters-bar">
+                        <div className="filter-group">
+                            <label><i className="far fa-calendar-alt me-1"></i> Período:</label>
+                            <select
+                                value={filtroTiempo}
+                                onChange={(e) => setFiltroTiempo(e.target.value)}
+                                className="filter-select"
+                            >
                                 <option value="7-dias">Últimos 7 días</option>
                                 <option value="30-dias">Últimos 30 días</option>
                                 <option value="90-dias">Últimos 3 meses</option>
+                                <option value="este-año">Este año</option>
                             </select>
                         </div>
+
+                        <div className="filter-group">
+                            <label><i className="fas fa-map-marker-alt me-1"></i> Comuna:</label>
+                            <select
+                                value={filtroComuna}
+                                onChange={(e) => setFiltroComuna(e.target.value)}
+                                className="filter-select"
+                            >
+                                <option value="todas">Todas</option>
+                                <option value="melipilla">Melipilla</option>
+                                <option value="santiago">Santiago</option>
+                                <option value="providencia">Providencia</option>
+                            </select>
+                        </div>
+
+                        <div className="filter-group">
+                            <label><i className="fas fa-tools me-1"></i> Servicio:</label>
+                            <select
+                                value={filtroServicio}
+                                onChange={(e) => setFiltroServicio(e.target.value)}
+                                className="filter-select"
+                            >
+                                <option value="todos">Todos</option>
+                                <option value="instalacion">Instalación</option>
+                                <option value="mantenimiento">Mantenimiento</option>
+                                <option value="reparacion">Reparación</option>
+                            </select>
+                        </div>
+
+                        <button
+                            className="btn-refresh"
+                            onClick={cargarMetricas}
+                            disabled={loading}
+                        >
+                            <i className={`fas fa-sync-alt ${loading ? 'fa-spin' : ''}`}></i>
+                        </button>
                     </div>
 
-                    {/* KPIs Grid: Estricto 4 columnas */}
-                    <div className="kpis-grid-strict">
-                        <div className="kpi-card-minimal">
-                            <div className="kpi-value">{kpis.totalSolicitudes}</div>
-                            <div className="kpi-label">Totales</div>
-                        </div>
-                        <div className="kpi-card-minimal success">
-                            <div className="kpi-value">{kpis.completadas}</div>
-                            <div className="kpi-label">Completadas</div>
-                        </div>
-                        <div className="kpi-card-minimal warning">
-                            <div className="kpi-value">{kpis.enProgreso}</div>
-                            <div className="kpi-label">En Progreso</div>
-                        </div>
-                        <div className="kpi-card-minimal danger">
-                            <div className="kpi-value">{kpis.pendientes}</div>
-                            <div className="kpi-label">Pendientes</div>
-                        </div>
-                    </div>
-
-                    {/* Charts Layout: 1 Arriba (Full), 2 Abajo (Mitad) */}
-                    <div className="charts-structure">
-                        <div className="chart-box full-width">
-                            <h3>Evolución Temporal</h3>
-                            <div className="chart-canvas">
-                                <Line data={lineData} options={commonOptions} />
+                    {/* KPIs Cards */}
+                    <div className="kpis-grid">
+                        <div className="kpi-card primary">
+                            <div className="kpi-icon-wrapper">
+                                <i className="fas fa-clipboard-list"></i>
+                            </div>
+                            <div className="kpi-data">
+                                <h3>{kpis.totalSolicitudes}</h3>
+                                <p>Solicitudes Totales</p>
                             </div>
                         </div>
 
-                        <div className="lower-charts-row">
-                            <div className="chart-box half-width">
-                                <h3>Rendimiento Técnico</h3>
-                                <div className="chart-canvas">
-                                    <Bar data={barData} options={commonOptions} />
-                                </div>
+                        <div className="kpi-card success">
+                            <div className="kpi-icon-wrapper">
+                                <i className="fas fa-check-double"></i>
                             </div>
-                            <div className="chart-box half-width">
-                                <h3>Equipos Demandados</h3>
-                                <div className="chart-canvas">
+                            <div className="kpi-data">
+                                <h3>{kpis.completadas}</h3>
+                                <p>Completadas</p>
+                            </div>
+                        </div>
+
+                        <div className="kpi-card warning">
+                            <div className="kpi-icon-wrapper">
+                                <i className="fas fa-clock"></i>
+                            </div>
+                            <div className="kpi-data">
+                                <h3>{solicitudesAbiertas}</h3>
+                                <p>En Curso / Pendientes</p>
+                            </div>
+                        </div>
+
+                        {/* KPI Extra: Tasa de éxito (ejemplo) */}
+                        <div className="kpi-card info">
+                            <div className="kpi-icon-wrapper">
+                                <i className="fas fa-percentage"></i>
+                            </div>
+                            <div className="kpi-data">
+                                <h3>
+                                    {kpis.totalSolicitudes > 0
+                                        ? Math.round((kpis.completadas / kpis.totalSolicitudes) * 100)
+                                        : 0}%
+                                </h3>
+                                <p>Tasa de Finalización</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Gráficos */}
+                    <div className="charts-grid">
+                        {/* Gráfico Lineal */}
+                        <div className="chart-container main-chart">
+                            <div className="chart-header-simple">
+                                <h5>Evolución de Solicitudes</h5>
+                            </div>
+                            <div className="chart-canvas-wrapper" style={{ height: '300px' }}>
+                                {porDiaFiltrado.length > 0 ? (
+                                    <Line data={lineChartData} options={lineChartOptions} />
+                                ) : (
+                                    <div className="no-data">Sin datos para mostrar</div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Gráfico Barras */}
+                        <div className="chart-container side-chart">
+                            <div className="chart-header-simple">
+                                <h5>Rendimiento Técnico</h5>
+                            </div>
+                            <div className="chart-canvas-wrapper" style={{ height: '300px' }}>
+                                {rendimiento.length > 0 ? (
+                                    <Bar data={barChartData} options={barChartOptions} />
+                                ) : (
+                                    <div className="no-data">Sin datos de técnicos</div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Gráfico Pie (Equipos) */}
+                        <div className="chart-container equipment-chart">
+                            <div className="chart-header-simple">
+                                <h5>Equipos Más Solicitados</h5>
+                            </div>
+                            <div className="chart-canvas-wrapper" style={{ height: '300px' }}>
+                                {equipos.length > 0 ? (
                                     <Pie data={pieData} options={pieOptions} />
-                                </div>
+                                ) : (
+                                    <div className="no-data">Sin datos de equipos</div>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Tabla Reciente */}
-                    <div className="recent-table-minimal">
-                        <h3>Actividad Reciente</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Título</th>
-                                    <th>Estado</th>
-                                    <th>Fecha</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {recientes.map(r => (
-                                    <tr key={r.id}>
-                                        <td>#{r.id}</td>
-                                        <td>{r.titulo}</td>
-                                        <td>
-                                            <span className={`badge-dot ${r.estado_actual}`}></span>
-                                            {r.estado_actual.replace('_', ' ')}
-                                        </td>
-                                        <td>{new Date(r.fecha_solicitud).toLocaleDateString()}</td>
+                    {/* Tabla Recientes */}
+                    <div className="recent-table-container">
+                        <div className="table-header">
+                            <h5>Últimas Solicitudes</h5>
+                        </div>
+                        <div className="table-responsive">
+                            <table className="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Título</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {recientes.length > 0 ? (
+                                        recientes.map((s) => (
+                                            <tr key={s.id}>
+                                                <td>#{s.id}</td>
+                                                <td>{s.titulo}</td>
+                                                <td>{getStatusBadge(s.estado_actual)}</td>
+                                                <td>{new Date(s.fecha_solicitud).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="4" className="text-center py-3">No hay solicitudes recientes</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </main>
             </div>

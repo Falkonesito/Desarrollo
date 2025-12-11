@@ -1,331 +1,498 @@
-/* ===== ADMIN METRICAS - MINIMALIST REFACTOR ===== */
+/* ===== ESTILOS DASHBOARD ANALYTICS INFOSER - VERSIÓN FINAL PULIDA ===== */
 
-:root {
-    --primary: #1a365d;
-    --accent: #3182ce;
-    --bg-light: #f7fafc;
-    --border: #e2e8f0;
-    --text-main: #2d3748;
-    --text-muted: #718096;
-}
-
-/* Base Container */
+/* 1. Contenedor Principal */
 .admin-metricas-container {
-    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    background-color: var(--bg-light);
-    height: 100vh;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: #f7fafc;
+    min-height: 100vh;
+    color: #2d3748;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 
-/* Header (Shared Style) */
-.admin-metricas-header {
-    background: white;
-    padding: 1rem 2rem;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+/* 2. Header - AJUSTADO */
+.admin-metricas-container .admin-metricas-header {
+    background: #ffffff;
+    padding: 0.75rem 2rem;
+    /* Reduje el padding vertical para quitar aire */
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    z-index: 10;
 }
 
-.header-content {
+.admin-metricas-container .admin-metricas-header .header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.header-left {
+.admin-metricas-container .header-left {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
-.header-left h1 {
+.admin-metricas-container .admin-metricas-header h1 {
+    color: #1a365d;
     font-size: 1.25rem;
-    color: var(--primary);
-    margin: 0;
     font-weight: 700;
+    margin: 0;
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.btn-volver {
-    border: 1px solid var(--border);
-    background: white;
-    padding: 0.5rem 1rem;
+/* ARREGLO: Botón Volver Sólido (No transparente) */
+.admin-metricas-container .btn-volver {
+    background-color: #ffffff;
+    /* Fondo blanco sólido */
+    border: 1px solid #cbd5e0;
+    /* Borde un poco más oscuro */
+    color: #4a5568;
+    padding: 0.4rem 1rem;
     border-radius: 6px;
-    font-size: 0.85rem;
-    color: var(--text-muted);
     cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
     transition: all 0.2s;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    /* Sombra suave */
 }
 
-.btn-volver:hover {
-    background: var(--bg-light);
-    color: var(--primary);
-    border-color: var(--text-muted);
+.admin-metricas-container .btn-volver:hover {
+    background-color: #edf2f7;
+    border-color: #a0aec0;
+    color: #1a365d;
 }
 
-.admin-badge {
+.admin-metricas-container .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.admin-metricas-container .admin-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.admin-metricas-container .admin-badge {
     background: #ebf8ff;
-    color: var(--accent);
+    color: #3182ce;
     padding: 0.25rem 0.75rem;
-    border-radius: 99px;
-    font-size: 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
     font-weight: 600;
 }
 
-/* Layout */
-.admin-metricas-layout {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-}
-
-/* Sidebar */
-.admin-metricas-sidebar {
-    width: 260px;
-    background: white;
-    border-right: 1px solid var(--border);
-    padding: 1.5rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    flex-shrink: 0;
-}
-
-.sidebar-btn {
-    width: 100%;
-    text-align: left;
-    padding: 0.75rem 1rem;
-    border: none;
+.admin-metricas-container .logout-btn {
     background: transparent;
-    color: var(--text-muted);
-    font-weight: 500;
-    border-radius: 8px;
+    border: none;
+    color: #718096;
     cursor: pointer;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    transition: all 0.2s;
+    font-size: 1.1rem;
+    transition: color 0.2s;
 }
 
-.sidebar-btn:hover {
-    color: var(--primary);
-    background: var(--bg-light);
-}
-
-.sidebar-btn.active {
-    color: var(--accent);
-    background: #ebf8ff;
-    font-weight: 600;
-}
-
-/* Main Content */
-.admin-metricas-content {
-    flex: 1;
-    padding: 2rem;
-    overflow-y: auto;
-    background: #f8fafc;
-}
-
-/* Content Header */
-.content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.content-header h2 {
-    font-size: 1.5rem;
-    color: var(--primary);
-    margin: 0;
-    font-weight: 700;
-}
-
-.clean-select {
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: white;
-    color: var(--text-main);
-    font-size: 0.9rem;
-    cursor: pointer;
-}
-
-/* KPIs Strict Grid */
-.kpis-grid-strict {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.kpi-card-minimal {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    /* Sombra muy sutil */
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.kpi-value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary);
-    line-height: 1.2;
-}
-
-.kpi-label {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    font-weight: 500;
-    margin-top: 0.25rem;
-}
-
-.kpi-card-minimal.success .kpi-value {
-    color: #38a169;
-}
-
-.kpi-card-minimal.warning .kpi-value {
-    color: #d69e2e;
-}
-
-.kpi-card-minimal.danger .kpi-value {
+.admin-metricas-container .logout-btn:hover {
     color: #e53e3e;
 }
 
+/* 3. Layout */
+.admin-metricas-container .admin-metricas-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
 
-/* Charts Structure */
-.charts-structure {
+/* 4. Sidebar (Menú Lateral) - AJUSTADO */
+.admin-metricas-container .admin-metricas-sidebar {
+    width: 250px;
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
+    padding: 1.5rem 1rem;
+    flex-shrink: 0;
+}
+
+.admin-metricas-container .sidebar-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 14px;
+    /* Un poco más compacto */
+    border: none;
+    background: transparent;
+    color: #718096;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+}
+
+.admin-metricas-container .sidebar-btn:hover {
+    background-color: #f7fafc;
+    color: #1a365d;
+}
+
+.admin-metricas-container .sidebar-btn.active {
+    background-color: #ebf8ff;
+    color: #3182ce;
+    font-weight: 600;
+}
+
+.admin-metricas-container .sidebar-btn i {
+    width: 20px;
+    text-align: center;
+}
+
+/* 5. Contenido Principal */
+.admin-metricas-container .admin-metricas-content {
+    flex: 1;
+    padding: 1.5rem 2rem;
+    /* Padding ajustado */
+    overflow-y: auto;
+}
+
+/* 6. Barra de Filtros */
+.admin-metricas-container .filters-bar {
+    background: #ffffff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    /* Menos margen abajo */
+    border: 1px solid #e2e8f0;
+}
+
+.admin-metricas-container .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-metricas-container .filter-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #718096;
+}
+
+.admin-metricas-container .filter-select {
+    padding: 0.4rem 2rem 0.4rem 0.8rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #2d3748;
+    font-size: 0.9rem;
+    cursor: pointer;
+    min-width: 130px;
+}
+
+.admin-metricas-container .btn-refresh {
+    margin-left: auto;
+    background: #3182ce;
+    color: #ffffff;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    /* Cuadrado con bordes suaves, más moderno */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(49, 130, 206, 0.4);
+}
+
+/* 7. KPIs Grid - ARREGLO: 4 EN LÍNEA SIN ESPACIOS GRANDES */
+.admin-metricas-container .kpis-grid {
+    display: grid;
+    /* Fuerza 4 columnas iguales */
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    /* Gap reducido para que estén más juntos */
+    margin-bottom: 1.5rem;
+}
+
+.admin-metricas-container .kpi-card {
+    background: #ffffff;
+    padding: 1.25rem;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid #e2e8f0;
+}
+
+.admin-metricas-container .kpi-icon-wrapper {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.admin-metricas-container .kpi-card.primary .kpi-icon-wrapper {
+    background: #ebf8ff;
+    color: #3182ce;
+}
+
+.admin-metricas-container .kpi-card.success .kpi-icon-wrapper {
+    background: #f0fff4;
+    color: #38a169;
+}
+
+.admin-metricas-container .kpi-card.warning .kpi-icon-wrapper {
+    background: #fffff0;
+    color: #d69e2e;
+}
+
+.admin-metricas-container .kpi-card.info .kpi-icon-wrapper {
+    background: #e6fffa;
+    color: #38b2ac;
+}
+
+.admin-metricas-container .kpi-data h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0;
+    color: #2d3748;
+}
+
+.admin-metricas-container .kpi-data p {
+    margin: 0;
+    color: #718096;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* 8. Gráficos Grid */
+.admin-metricas-container .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
 
-.lower-charts-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-}
-
-.chart-box {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 8px;
+.admin-metricas-container .chart-container {
+    background: #ffffff;
+    border-radius: 12px;
     padding: 1.5rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
 }
 
-.chart-box h3 {
-    margin: 0 0 1.5rem 0;
-    font-size: 1rem;
-    color: var(--primary);
-    font-weight: 600;
-    border-bottom: 1px solid #edf2f7;
-    padding-bottom: 0.75rem;
+.admin-metricas-container .chart-container.main-chart {
+    grid-column: 1;
+    grid-row: 1;
 }
 
-.chart-canvas {
-    height: 300px;
+.admin-metricas-container .chart-container.side-chart {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.admin-metricas-container .chart-container.equipment-chart {
+    grid-column: 1;
+    grid-row: 2;
+    /* max-width: 500px; Remove max-width constraint if causing issues */
+    /* margin: 0 auto; */
     width: 100%;
+    align-items: center;
 }
 
-/* Table Minimal */
-.recent-table-minimal {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+/* ARREGLO: Pie Chart Container necesita altura definida */
+.admin-metricas-container .chart-container.equipment-chart .chart-canvas-wrapper {
+    height: 350px;
+    /* Mas altura para la leyenda */
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }
 
-.recent-table-minimal h3 {
-    margin: 0 0 1rem 0;
+.admin-metricas-container .chart-header-simple {
+    margin-bottom: 1rem;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.admin-metricas-container .chart-header-simple h5 {
+    margin: 0;
     font-size: 1rem;
-    color: var(--primary);
+    font-weight: 700;
+    color: #2d3748;
 }
 
-.recent-table-minimal table {
+.admin-metricas-container .chart-canvas-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 280px;
+}
+
+.admin-metricas-container .no-data {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #718096;
+    background: #f7fafc;
+    border-radius: 8px;
+    min-height: 200px;
+}
+
+/* 9. Tabla Recientes */
+.admin-metricas-container .recent-table-container {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.admin-metricas-container .table-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #ffffff;
+}
+
+.admin-metricas-container .table-header h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.admin-metricas-container .table-responsive {
+    overflow-x: auto;
+}
+
+.admin-metricas-container .table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.recent-table-minimal th {
-    text-align: left;
-    padding: 0.75rem 1rem;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    border-bottom: 1px solid var(--border);
+.admin-metricas-container .table th {
+    background: #f9fafb;
+    color: #718096;
     font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    padding: 0.75rem 1.5rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
 }
 
-.recent-table-minimal td {
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    color: var(--text-main);
-    border-bottom: 1px solid #edf2f7;
+.admin-metricas-container .table td {
+    padding: 0.75rem 1.5rem;
+    color: #2d3748;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
 }
 
-.recent-table-minimal tr:last-child td {
-    border-bottom: none;
-}
-
-.badge-dot {
+/* 10. Badges */
+.admin-metricas-container .badge {
+    padding: 0.25em 0.7em;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 20px;
     display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-right: 8px;
 }
 
-.badge-dot.completada {
-    background-color: #38a169;
+.admin-metricas-container .badge-success {
+    background: #c6f6d5;
+    color: #22543d;
 }
 
-.badge-dot.en_proceso {
-    background-color: #d69e2e;
+.admin-metricas-container .badge-warning {
+    background: #fefcbf;
+    color: #744210;
 }
 
-.badge-dot.pendiente {
-    background-color: #e53e3e;
+.admin-metricas-container .badge-info {
+    background: #bee3f8;
+    color: #2a4365;
 }
 
-.badge-dot.asignada {
-    background-color: #3182ce;
+.admin-metricas-container .badge-danger {
+    background: #fed7d7;
+    color: #822727;
 }
 
-/* Responsive */
+.admin-metricas-container .badge-secondary {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+/* 11. Responsive */
+@media (max-width: 1200px) {
+    .admin-metricas-container .kpis-grid {
+        grid-template-columns: repeat(2, 1fr);
+        /* 2x2 en pantallas medianas */
+    }
+}
+
 @media (max-width: 1024px) {
-    .lower-charts-row {
+    .admin-metricas-container .charts-grid {
         grid-template-columns: 1fr;
     }
 
-    .kpis-grid-strict {
-        grid-template-columns: 1fr 1fr;
+    .admin-metricas-container .chart-container.main-chart {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .admin-metricas-container .chart-container.side-chart {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .admin-metricas-container .chart-container.equipment-chart {
+        grid-column: 1;
+        grid-row: 3;
+    }
+
+    .admin-metricas-container .filters-bar {
+        flex-direction: column;
+        align-items: stretch;
     }
 }
 
 @media (max-width: 768px) {
-    .admin-metricas-layout {
+    .admin-metricas-container .admin-metricas-layout {
         flex-direction: column;
     }
 
     .admin-metricas-sidebar {
         width: 100%;
-        padding: 1rem;
         border-right: none;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1rem;
     }
+
+    .admin-metricas-container .kpis-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* 1 columna en móvil */
 }
