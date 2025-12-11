@@ -1,5 +1,7 @@
 /* ===== ESTILOS GESTIÓN DE TÉCNICOS INFOSER ===== */
-:root {
+
+/* Variables moved to container scope */
+.admin-tecnicos-container {
     --primary-blue: #1a365d;
     --secondary-blue: #2d5aa0;
     --accent-blue: #3182ce;
@@ -10,10 +12,7 @@
     --success: #38a169;
     --warning: #d69e2e;
     --danger: #e53e3e;
-}
 
-/* Contenedor Principal */
-.admin-tecnicos-container {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%);
     min-height: 100vh;
@@ -21,14 +20,14 @@
 }
 
 /* Header */
-.admin-tecnicos-header {
+.admin-tecnicos-container .admin-tecnicos-header {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     padding: 1.5rem 2rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.admin-tecnicos-header h1 {
+.admin-tecnicos-container .admin-tecnicos-header h1 {
     color: var(--white);
     font-size: 2rem;
     font-weight: 700;
@@ -38,18 +37,18 @@
     gap: 0.5rem;
 }
 
-.admin-tecnicos-header h1 i {
+.admin-tecnicos-container .admin-tecnicos-header h1 i {
     color: var(--accent-blue);
 }
 
 /* Layout Principal */
-.admin-tecnicos-layout {
+.admin-tecnicos-container .admin-tecnicos-layout {
     display: flex;
     min-height: calc(100vh - 80px);
 }
 
 /* Sidebar */
-.admin-tecnicos-sidebar {
+.admin-tecnicos-container .admin-tecnicos-sidebar {
     width: 280px;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -57,7 +56,7 @@
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.sidebar-btn {
+.admin-tecnicos-container .sidebar-btn {
     width: 100%;
     padding: 1rem 1.5rem;
     margin-bottom: 0.5rem;
@@ -74,18 +73,18 @@
     gap: 0.75rem;
 }
 
-.sidebar-btn:hover {
+.admin-tecnicos-container .sidebar-btn:hover {
     background: var(--light-gray);
     color: var(--primary-blue);
 }
 
-.sidebar-btn.active {
+.admin-tecnicos-container .sidebar-btn.active {
     background: var(--accent-blue);
     color: var(--white);
 }
 
 /* Contenido Principal */
-.admin-tecnicos-content {
+.admin-tecnicos-container .admin-tecnicos-content {
     flex: 1;
     padding: 2rem;
     background: var(--white);
@@ -93,7 +92,7 @@
 }
 
 /* Header del Contenido */
-.content-header {
+.admin-tecnicos-container .content-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -102,20 +101,20 @@
     border-bottom: 2px solid var(--light-gray);
 }
 
-.content-header h2 {
+.admin-tecnicos-container .content-header h2 {
     color: var(--primary-blue);
     font-size: 2rem;
     font-weight: 700;
     margin: 0;
 }
 
-.header-actions {
+.admin-tecnicos-container .header-actions {
     display: flex;
     gap: 1rem;
     align-items: center;
 }
 
-.search-input {
+.admin-tecnicos-container .search-input {
     padding: 0.75rem 1rem;
     border: 2px solid var(--light-gray);
     border-radius: 8px;
@@ -124,21 +123,21 @@
     transition: all 0.3s ease;
 }
 
-.search-input:focus {
+.admin-tecnicos-container .search-input:focus {
     outline: none;
     border-color: var(--accent-blue);
     box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
 }
 
 /* Estadísticas */
-.tecnicos-stats {
+.admin-tecnicos-container .tecnicos-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2.5rem;
 }
 
-.stat-card {
+.admin-tecnicos-container .stat-card {
     background: linear-gradient(135deg, var(--white) 0%, #f7fafc 100%);
     padding: 2rem;
     border-radius: 12px;
@@ -150,7 +149,7 @@
     overflow: hidden;
 }
 
-.stat-card::before {
+.admin-tecnicos-container .stat-card::before {
     content: '';
     position: absolute;
     top: 0;
@@ -160,12 +159,12 @@
     background: linear-gradient(90deg, var(--accent-blue), var(--secondary-blue));
 }
 
-.stat-card:hover {
+.admin-tecnicos-container .stat-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
-.stat-card h3 {
+.admin-tecnicos-container .stat-card h3 {
     color: var(--medium-gray);
     font-size: 0.9rem;
     font-weight: 600;
@@ -174,7 +173,7 @@
     letter-spacing: 0.5px;
 }
 
-.stat-number {
+.admin-tecnicos-container .stat-number {
     font-size: 2.5rem;
     font-weight: 700;
     color: var(--primary-blue);
@@ -182,7 +181,7 @@
 }
 
 /* Tabla */
-.table-container {
+.admin-tecnicos-container .table-container {
     background: var(--white);
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
@@ -190,13 +189,13 @@
     border: 1px solid var(--light-gray);
 }
 
-.tecnicos-table {
+.admin-tecnicos-container .tecnicos-table {
     width: 100%;
     border-collapse: collapse;
     background: var(--white);
 }
 
-.tecnicos-table th {
+.admin-tecnicos-container .tecnicos-table th {
     background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
     color: var(--white);
     padding: 1.25rem 1rem;
@@ -208,31 +207,31 @@
     border: none;
 }
 
-.tecnicos-table th:first-child {
+.admin-tecnicos-container .tecnicos-table th:first-child {
     border-radius: 12px 0 0 0;
 }
 
-.tecnicos-table th:last-child {
+.admin-tecnicos-container .tecnicos-table th:last-child {
     border-radius: 0 12px 0 0;
 }
 
-.tecnicos-table td {
+.admin-tecnicos-container .tecnicos-table td {
     padding: 1.25rem 1rem;
     border-bottom: 1px solid var(--light-gray);
     vertical-align: middle;
     transition: background-color 0.2s ease;
 }
 
-.tecnicos-table tr:last-child td {
+.admin-tecnicos-container .tecnicos-table tr:last-child td {
     border-bottom: none;
 }
 
-.tecnicos-table tr:hover td {
+.admin-tecnicos-container .tecnicos-table tr:hover td {
     background: #f7fafc;
 }
 
 /* Información del Técnico */
-.tecnico-info strong {
+.admin-tecnicos-container .tecnico-info strong {
     display: block;
     font-size: 1.1rem;
     color: var(--dark-gray);
@@ -240,12 +239,12 @@
     font-weight: 600;
 }
 
-.tecnico-info small {
+.admin-tecnicos-container .tecnico-info small {
     color: var(--medium-gray);
     font-size: 0.8rem;
 }
 
-.contacto-info div {
+.admin-tecnicos-container .contacto-info div {
     margin-bottom: 0.25rem;
     color: var(--medium-gray);
     display: flex;
@@ -253,23 +252,23 @@
     gap: 0.5rem;
 }
 
-.contacto-info div:before {
+.admin-tecnicos-container .contacto-info div:before {
     font-family: 'Font Awesome 5 Free';
     font-weight: 900;
     width: 16px;
     color: var(--accent-blue);
 }
 
-.contacto-info div:first-child:before {
+.admin-tecnicos-container .contacto-info div:first-child:before {
     content: '\f0e0';
 }
 
-.contacto-info div:last-child:before {
+.admin-tecnicos-container .contacto-info div:last-child:before {
     content: '\f095';
 }
 
 /* Badges */
-.badge {
+.admin-tecnicos-container .badge {
     padding: 0.5rem 1rem;
     border-radius: 20px;
     font-size: 0.8rem;
@@ -279,19 +278,19 @@
     display: inline-block;
 }
 
-.badge.activo {
+.admin-tecnicos-container .badge.activo {
     background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
     color: #22543d;
     border: 1px solid #9ae6b4;
 }
 
-.badge.inactivo {
+.admin-tecnicos-container .badge.inactivo {
     background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
     color: #742a2a;
     border: 1px solid #feb2b2;
 }
 
-.solicitud-count {
+.admin-tecnicos-container .solicitud-count {
     font-weight: bold;
     color: var(--accent-blue);
     font-size: 1.1rem;
@@ -302,12 +301,12 @@
 }
 
 /* Botones de Acción */
-.action-buttons {
+.admin-tecnicos-container .action-buttons {
     display: flex;
     gap: 0.5rem;
 }
 
-.btn-small {
+.admin-tecnicos-container .btn-small {
     padding: 0.5rem 1rem;
     border: none;
     border-radius: 6px;
@@ -320,28 +319,28 @@
     gap: 0.25rem;
 }
 
-.btn-small:hover {
+.admin-tecnicos-container .btn-small:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.btn-info {
+.admin-tecnicos-container .btn-info {
     background: linear-gradient(135deg, var(--accent-blue) 0%, #2c5aa0 100%);
     color: var(--white);
 }
 
-.btn-warning {
+.admin-tecnicos-container .btn-warning {
     background: linear-gradient(135deg, var(--warning) 0%, #b7791f 100%);
     color: var(--white);
 }
 
-.btn-danger {
+.admin-tecnicos-container .btn-danger {
     background: linear-gradient(135deg, var(--danger) 0%, #c53030 100%);
     color: var(--white);
 }
 
 /* Botón Principal */
-.btn-primary {
+.admin-tecnicos-container .btn-primary {
     background: linear-gradient(135deg, var(--accent-blue) 0%, var(--secondary-blue) 100%);
     border: none;
     padding: 0.75rem 1.5rem;
@@ -357,13 +356,13 @@
     box-shadow: 0 2px 4px rgba(49, 130, 206, 0.2);
 }
 
-.btn-primary:hover {
+.admin-tecnicos-container .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
 }
 
 /* Botón de Logout */
-.logout-btn {
+.admin-tecnicos-container .logout-btn {
     background: rgba(255, 255, 255, 0.2);
     color: var(--white);
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -376,63 +375,63 @@
     gap: 0.5rem;
 }
 
-.logout-btn:hover {
+.admin-tecnicos-container .logout-btn:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: translateY(-1px);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .admin-tecnicos-layout {
+    .admin-tecnicos-container .admin-tecnicos-layout {
         flex-direction: column;
     }
 
-    .admin-tecnicos-sidebar {
+    .admin-tecnicos-container .admin-tecnicos-sidebar {
         width: 100%;
         padding: 1rem;
     }
 
-    .admin-tecnicos-content {
+    .admin-tecnicos-container .admin-tecnicos-content {
         padding: 1rem;
         border-radius: 0;
     }
 
-    .content-header {
+    .admin-tecnicos-container .content-header {
         flex-direction: column;
         gap: 1rem;
         align-items: stretch;
     }
 
-    .header-actions {
+    .admin-tecnicos-container .header-actions {
         flex-direction: column;
     }
 
-    .search-input {
+    .admin-tecnicos-container .search-input {
         width: 100%;
     }
 
-    .tecnicos-stats {
+    .admin-tecnicos-container .tecnicos-stats {
         grid-template-columns: 1fr;
     }
 
-    .action-buttons {
+    .admin-tecnicos-container .action-buttons {
         flex-direction: column;
     }
 
-    .tecnicos-table {
+    .admin-tecnicos-container .tecnicos-table {
         display: block;
         overflow-x: auto;
     }
 
-    .tecnicos-table th,
-    .tecnicos-table td {
+    .admin-tecnicos-container .tecnicos-table th,
+    .admin-tecnicos-container .tecnicos-table td {
         padding: 0.75rem 0.5rem;
         font-size: 0.9rem;
     }
 }
 
 /* Efectos de carga y animaciones */
-@keyframes fadeIn {
+@keyframes fadeInTecnicos {
     from {
         opacity: 0;
         transform: translateY(20px);
@@ -444,31 +443,31 @@
     }
 }
 
-.stat-card,
-.table-container {
-    animation: fadeIn 0.6s ease-out;
+.admin-tecnicos-container .stat-card,
+.admin-tecnicos-container .table-container {
+    animation: fadeInTecnicos 0.6s ease-out;
 }
 
-.table-container {
+.admin-tecnicos-container .table-container {
     animation-delay: 0.2s;
     animation-fill-mode: both;
 }
 
 /* Botón Volver */
-.header-content {
+.admin-tecnicos-container .header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
 }
 
-.header-left {
+.admin-tecnicos-container .header-left {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-.btn-volver {
+.admin-tecnicos-container .btn-volver {
     background: rgba(255, 255, 255, 0.2);
     color: var(--white);
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -483,53 +482,53 @@
     white-space: nowrap;
 }
 
-.btn-volver:hover {
+.admin-tecnicos-container .btn-volver:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: translateY(-1px);
 }
 
 /* Ajustar el título */
-.admin-clientes-header h1,
-.admin-solicitudes-header h1,
-.admin-tecnicos-header h1 {
+.admin-tecnicos-container .admin-clientes-header h1,
+.admin-tecnicos-container .admin-solicitudes-header h1,
+.admin-tecnicos-container .admin-tecnicos-header h1 {
     margin: 0;
     font-size: 1.8rem;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .header-content {
+    .admin-tecnicos-container .header-content {
         flex-direction: column;
         gap: 1rem;
         align-items: stretch;
     }
 
-    .header-left {
+    .admin-tecnicos-container .header-left {
         flex-direction: column;
         gap: 0.5rem;
         align-items: flex-start;
     }
 
-    .admin-clientes-header h1,
-    .admin-solicitudes-header h1,
-    .admin-tecnicos-header h1 {
+    .admin-tecnicos-container .admin-clientes-header h1,
+    .admin-tecnicos-container .admin-solicitudes-header h1,
+    .admin-tecnicos-container .admin-tecnicos-header h1 {
         font-size: 1.3rem;
     }
 
-    .btn-volver {
+    .admin-tecnicos-container .btn-volver {
         align-self: flex-start;
     }
 }
 
 @media (max-width: 480px) {
 
-    .admin-clientes-header h1,
-    .admin-solicitudes-header h1,
-    .admin-tecnicos-header h1 {
+    .admin-tecnicos-container .admin-clientes-header h1,
+    .admin-tecnicos-container .admin-solicitudes-header h1,
+    .admin-tecnicos-container .admin-tecnicos-header h1 {
         font-size: 1.1rem;
     }
 
-    .btn-volver {
+    .admin-tecnicos-container .btn-volver {
         font-size: 0.8rem;
         padding: 0.4rem 0.8rem;
     }
