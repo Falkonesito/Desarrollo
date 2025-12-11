@@ -1,40 +1,50 @@
-/* ===== ESTILOS DASHBOARD ANALYTICS INFOSER - VERSIÓN FINAL PULIDA ===== */
+/* ===== ESTILOS DASHBOARD ANALYTICS INFOSER - BASADO EN ADMIN CLIENTES ===== */
 
-/* 1. Contenedor Principal */
+/* Variables heredadas del estilo clientes para consistencia */
+:root {
+    --primary-blue: #1a365d;
+    --secondary-blue: #2d5aa0;
+    --accent-blue: #3182ce;
+    --dark-gray: #2d3748;
+    --medium-gray: #4a5568;
+    --light-gray: #e2e8f0;
+    --white: #ffffff;
+}
+
+/* 1. Contenedor Principal - Match adminClientes */
 .admin-metricas-container {
-    font-family: 'Inter', 'Segoe UI', sans-serif;
-    background: #f7fafc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%);
     min-height: 100vh;
-    color: #2d3748;
+    color: var(--dark-gray);
     display: flex;
     flex-direction: column;
 }
 
-/* 2. Header - AJUSTADO */
-.admin-metricas-container .admin-metricas-header {
-    background: #ffffff;
-    padding: 0.75rem 2rem;
-    /* Reduje el padding vertical para quitar aire */
-    border-bottom: 1px solid #e2e8f0;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+/* 2. Header - Match adminClientes */
+.admin-metricas-header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 10;
 }
 
-.admin-metricas-container .admin-metricas-header .header-content {
+.admin-metricas-header .header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.admin-metricas-container .header-left {
+.header-left {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-.admin-metricas-container .admin-metricas-header h1 {
-    color: #1a365d;
-    font-size: 1.25rem;
+.admin-metricas-header h1 {
+    color: var(--white);
+    font-size: 2rem;
     font-weight: 700;
     margin: 0;
     display: flex;
@@ -42,112 +52,107 @@
     gap: 0.5rem;
 }
 
-/* ARREGLO: Botón Volver Sólido (No transparente) */
+/* Botón Volver - Match adminClientes */
 .admin-metricas-container .btn-volver {
-    background-color: #ffffff;
-    /* Fondo blanco sólido */
-    border: 1px solid #cbd5e0;
-    /* Borde un poco más oscuro */
-    color: #4a5568;
-    padding: 0.4rem 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--white);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.5rem 1rem;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    /* Sombra suave */
+    font-size: 0.9rem;
+    white-space: nowrap;
 }
 
 .admin-metricas-container .btn-volver:hover {
-    background-color: #edf2f7;
-    border-color: #a0aec0;
-    color: #1a365d;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
 }
 
-.admin-metricas-container .header-actions {
+.header-actions {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-.admin-metricas-container .admin-info {
+.admin-info {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-.admin-metricas-container .admin-badge {
-    background: #ebf8ff;
-    color: #3182ce;
+.admin-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--white);
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .admin-metricas-container .logout-btn {
-    background: transparent;
-    border: none;
-    color: #718096;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--white);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 1.1rem;
-    transition: color 0.2s;
+    transition: all 0.3s ease;
 }
 
 .admin-metricas-container .logout-btn:hover {
-    color: #e53e3e;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
 }
 
-/* 3. Layout */
-.admin-metricas-container .admin-metricas-layout {
+/* 3. Layout - Match adminClientes */
+.admin-metricas-layout {
     display: flex;
+    min-height: calc(100vh - 80px);
+    /* 80px aprox header */
     flex: 1;
-    overflow: hidden;
 }
 
-/* 4. Sidebar (Menú Lateral) - AJUSTADO */
-.admin-metricas-container .admin-metricas-sidebar {
-    width: 250px;
-    background: #ffffff;
-    border-right: 1px solid #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    padding: 1.5rem 1rem;
+/* 4. Sidebar - Match adminClientes */
+.admin-metricas-sidebar {
+    width: 280px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 2rem 1rem;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
 }
 
 .admin-metricas-container .sidebar-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
     width: 100%;
-    padding: 10px 14px;
-    /* Un poco más compacto */
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.5rem;
     border: none;
     background: transparent;
-    color: #718096;
-    font-size: 0.9rem;
-    font-weight: 500;
     text-align: left;
-    cursor: pointer;
-    transition: all 0.2s;
     border-radius: 8px;
-    margin-bottom: 0.25rem;
+    font-weight: 600;
+    color: var(--medium-gray);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .admin-metricas-container .sidebar-btn:hover {
-    background-color: #f7fafc;
-    color: #1a365d;
+    background: var(--light-gray);
+    color: var(--primary-blue);
 }
 
 .admin-metricas-container .sidebar-btn.active {
-    background-color: #ebf8ff;
-    color: #3182ce;
-    font-weight: 600;
+    background: var(--accent-blue);
+    color: var(--white);
 }
 
 .admin-metricas-container .sidebar-btn i {
@@ -155,336 +160,331 @@
     text-align: center;
 }
 
-/* 5. Contenido Principal */
-.admin-metricas-container .admin-metricas-content {
+/* 5. Contenido Principal - Match adminClientes */
+.admin-metricas-content {
     flex: 1;
-    padding: 1.5rem 2rem;
-    /* Padding ajustado */
+    padding: 2rem;
+    background: var(--white);
     overflow-y: auto;
 }
 
-/* 6. Barra de Filtros */
+/* 6. Barra de Filtros - Adaptada al estilo card */
 .admin-metricas-container .filters-bar {
-    background: #ffffff;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    background: var(--white);
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    margin-bottom: 1.5rem;
-    /* Menos margen abajo */
-    border: 1px solid #e2e8f0;
+    margin-bottom: 2rem;
+    border: 1px solid var(--light-gray);
+    flex-wrap: wrap;
 }
 
-.admin-metricas-container .filter-group {
+.filter-group {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.admin-metricas-container .filter-group label {
-    font-size: 0.85rem;
+.filter-group label {
+    font-size: 0.9rem;
     font-weight: 600;
-    color: #718096;
+    color: var(--medium-gray);
 }
 
-.admin-metricas-container .filter-select {
-    padding: 0.4rem 2rem 0.4rem 0.8rem;
-    border: 1px solid #e2e8f0;
+.filter-select {
+    padding: 0.5rem 2rem 0.5rem 0.8rem;
+    border: 1px solid var(--light-gray);
     border-radius: 6px;
-    background-color: #fff;
-    color: #2d3748;
+    background-color: #f8fafc;
+    color: var(--dark-gray);
     font-size: 0.9rem;
     cursor: pointer;
-    min-width: 130px;
+    min-width: 150px;
 }
 
-.admin-metricas-container .btn-refresh {
+.btn-refresh {
     margin-left: auto;
-    background: #3182ce;
-    color: #ffffff;
+    background: var(--accent-blue);
+    color: var(--white);
     border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    /* Cuadrado con bordes suaves, más moderno */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(49, 130, 206, 0.4);
-}
-
-/* 7. KPIs Grid - ARREGLO: 4 EN LÍNEA SIN ESPACIOS GRANDES */
-.admin-metricas-container .kpis-grid {
-    display: grid;
-    /* Fuerza 4 columnas iguales */
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    /* Gap reducido para que estén más juntos */
-    margin-bottom: 1.5rem;
-}
-
-.admin-metricas-container .kpi-card {
-    background: #ffffff;
-    padding: 1.25rem;
-    border-radius: 10px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    border: 1px solid #e2e8f0;
-}
-
-.admin-metricas-container .kpi-icon-wrapper {
-    width: 42px;
-    height: 42px;
+    width: 36px;
+    height: 36px;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+}
+
+.btn-refresh:hover {
+    background: var(--secondary-blue);
+    transform: translateY(-2px);
+}
+
+/* 7. KPIs Grid - Estilo Stat Card de adminClientes */
+.kpis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.kpi-card {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid var(--light-gray);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.kpi-icon-wrapper {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
     flex-shrink: 0;
 }
 
-.admin-metricas-container .kpi-card.primary .kpi-icon-wrapper {
+.kpi-card.primary .kpi-icon-wrapper {
     background: #ebf8ff;
     color: #3182ce;
 }
 
-.admin-metricas-container .kpi-card.success .kpi-icon-wrapper {
-    background: #f0fff4;
-    color: #38a169;
+.kpi-card.success .kpi-icon-wrapper {
+    background: #d4edda;
+    color: #155724;
 }
 
-.admin-metricas-container .kpi-card.warning .kpi-icon-wrapper {
-    background: #fffff0;
-    color: #d69e2e;
+.kpi-card.warning .kpi-icon-wrapper {
+    background: #fff3cd;
+    color: #856404;
 }
 
-.admin-metricas-container .kpi-card.info .kpi-icon-wrapper {
-    background: #e6fffa;
-    color: #38b2ac;
+.kpi-card.info .kpi-icon-wrapper {
+    background: #d1ecf1;
+    color: #0c5460;
 }
 
-.admin-metricas-container .kpi-data h3 {
-    font-size: 1.4rem;
+.kpi-data h3 {
+    font-size: 1.8rem;
     font-weight: 700;
     margin: 0;
-    color: #2d3748;
+    color: var(--primary-blue);
 }
 
-.admin-metricas-container .kpi-data p {
+.kpi-data p {
     margin: 0;
-    color: #718096;
-    font-size: 0.8rem;
-    font-weight: 500;
+    color: var(--medium-gray);
+    font-size: 0.9rem;
+    font-weight: 600;
 }
 
-/* 8. Gráficos Grid */
-.admin-metricas-container .charts-grid {
+/* 8. Gráficos Grid - Estilo Card */
+.charts-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
 
-.admin-metricas-container .chart-container {
-    background: #ffffff;
+.chart-container {
+    background: var(--white);
     border-radius: 12px;
     padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e2e8f0;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--light-gray);
     display: flex;
     flex-direction: column;
 }
 
-.admin-metricas-container .chart-container.main-chart {
+.chart-container.main-chart {
     grid-column: 1;
-    grid-row: 1;
 }
 
-.admin-metricas-container .chart-container.side-chart {
+.chart-container.side-chart {
     grid-column: 2;
-    grid-row: 1;
 }
 
-.admin-metricas-container .chart-container.equipment-chart {
+.chart-container.equipment-chart {
     grid-column: 1 / -1;
-    grid-row: 2;
-    max-width: 500px;
+    max-width: 600px;
     margin: 0 auto;
     width: 100%;
-    align-items: center;
 }
 
-.admin-metricas-container .chart-header-simple {
-    margin-bottom: 1rem;
+.chart-header-simple {
+    margin-bottom: 1.5rem;
     width: 100%;
-    display: flex;
-    justify-content: space-between;
+    border-bottom: 1px solid var(--light-gray);
+    padding-bottom: 1rem;
 }
 
-.admin-metricas-container .chart-header-simple h5 {
+.chart-header-simple h5 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    color: #2d3748;
+    color: var(--primary-blue);
 }
 
-.admin-metricas-container .chart-canvas-wrapper {
+.chart-canvas-wrapper {
     position: relative;
     width: 100%;
-    min-height: 280px;
+    min-height: 300px;
 }
 
-.admin-metricas-container .no-data {
+.no-data {
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #718096;
-    background: #f7fafc;
+    color: var(--medium-gray);
+    background: #f8fafc;
     border-radius: 8px;
     min-height: 200px;
 }
 
-/* 9. Tabla Recientes */
-.admin-metricas-container .recent-table-container {
-    background: #ffffff;
+/* 9. Tabla Recientes - Match adminClientes Style */
+.recent-table-container {
+    background: var(--white);
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e2e8f0;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--light-gray);
     overflow: hidden;
 }
 
-.admin-metricas-container .table-header {
+.table-header {
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
-    background: #ffffff;
+    border-bottom: 1px solid var(--light-gray);
+    background: var(--white);
 }
 
-.admin-metricas-container .table-header h5 {
+.table-header h5 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    color: #2d3748;
+    color: var(--primary-blue);
 }
 
-.admin-metricas-container .table-responsive {
+.table-responsive {
     overflow-x: auto;
 }
 
-.admin-metricas-container .table {
+.table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.admin-metricas-container .table th {
-    background: #f9fafb;
-    color: #718096;
+.table th {
+    background: var(--primary-blue);
+    color: var(--white);
     font-weight: 600;
-    font-size: 0.75rem;
+    font-size: 0.9rem;
     text-transform: uppercase;
-    padding: 0.75rem 1.5rem;
+    padding: 1rem;
     text-align: left;
-    border-bottom: 1px solid #e2e8f0;
 }
 
-.admin-metricas-container .table td {
-    padding: 0.75rem 1.5rem;
-    color: #2d3748;
-    font-size: 0.85rem;
-    border-bottom: 1px solid #e2e8f0;
+.table td {
+    padding: 1rem;
+    color: var(--dark-gray);
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--light-gray);
     vertical-align: middle;
 }
 
-/* 10. Badges */
+.table tr:hover td {
+    background: #f8fafc;
+}
+
+/* 10. Badges - Match adminClientes */
 .admin-metricas-container .badge {
-    padding: 0.25em 0.7em;
-    font-size: 0.7rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
     font-weight: 600;
     border-radius: 20px;
     display: inline-block;
+    letter-spacing: 0.5px;
 }
 
 .admin-metricas-container .badge-success {
-    background: #c6f6d5;
-    color: #22543d;
+    background: #d4edda;
+    color: #155724;
 }
 
 .admin-metricas-container .badge-warning {
-    background: #fefcbf;
-    color: #744210;
+    background: #fff3cd;
+    color: #856404;
 }
 
 .admin-metricas-container .badge-info {
-    background: #bee3f8;
-    color: #2a4365;
+    background: #d1ecf1;
+    color: #0c5460;
 }
 
 .admin-metricas-container .badge-danger {
-    background: #fed7d7;
-    color: #822727;
+    background: #f8d7da;
+    color: #721c24;
 }
 
 .admin-metricas-container .badge-secondary {
-    background: #e2e8f0;
-    color: #4a5568;
+    background: var(--light-gray);
+    color: var(--medium-gray);
 }
 
 /* 11. Responsive */
-@media (max-width: 1200px) {
-    .admin-metricas-container .kpis-grid {
-        grid-template-columns: repeat(2, 1fr);
-        /* 2x2 en pantallas medianas */
-    }
-}
-
 @media (max-width: 1024px) {
-    .admin-metricas-container .charts-grid {
+    .charts-grid {
         grid-template-columns: 1fr;
     }
 
-    .admin-metricas-container .chart-container.main-chart {
+    .chart-container.main-chart,
+    .chart-container.side-chart {
         grid-column: 1;
-        grid-row: 1;
-    }
-
-    .admin-metricas-container .chart-container.side-chart {
-        grid-column: 1;
-        grid-row: 2;
-    }
-
-    .admin-metricas-container .chart-container.equipment-chart {
-        grid-column: 1;
-        grid-row: 3;
-        max-width: 100%;
-    }
-
-    .admin-metricas-container .filters-bar {
-        flex-direction: column;
-        align-items: stretch;
     }
 }
 
 @media (max-width: 768px) {
-    .admin-metricas-container .admin-metricas-layout {
+    .admin-metricas-layout {
         flex-direction: column;
     }
 
-    .admin-metricas-container .admin-metricas-sidebar {
+    .admin-metricas-sidebar {
         width: 100%;
-        border-right: none;
-        border-bottom: 1px solid #e2e8f0;
         padding: 1rem;
     }
 
-    .admin-metricas-container .kpis-grid {
+    .admin-metricas-content {
+        padding: 1rem;
+    }
+
+    .kpis-grid {
         grid-template-columns: 1fr;
     }
 
-    /* 1 columna en móvil */
+    .filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-refresh {
+        margin-left: 0;
+        width: 100%;
+    }
 }
