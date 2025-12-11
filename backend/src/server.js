@@ -1143,24 +1143,54 @@ async function obtenerMetricasAdmin(req, res) {
       rRecientes,
       rEquipos,
     ] = await Promise.all([
-      pool.query('SELECT * FROM vista_dashboard'),
-      pool.query('SELECT * FROM vista_solicitudes_por_dia ORDER BY fecha'),
-      pool.query('SELECT * FROM vista_rendimiento_tecnicos'),
+      // 1. Dashboard Global (Directo)
       pool.query(`
         SELECT 
-          id,
-          titulo,
-          cliente_nombre,
-          cliente_email,
-          estado_actual,
-          prioridad,
-          fecha_solicitud,
-          direccion_servicio
-        FROM vista_solicitudes_recientes
-        ORDER BY fecha_solicitud DESC
+          (SELECT COUNT(*) FROM solicitudes) AS total_solicitudes,
+          (SELECT COUNT(*) FROM solicitudes WHERE estado_actual = 'completada') AS completadas,
+          (SELECT COUNT(*) FROM solicitudes WHERE estado_actual = 'pendiente') AS pendientes,
+          (SELECT COUNT(*) FROM solicitudes WHERE estado_actual IN ('en_progreso','en_proceso','asignada')) AS en_progreso
+      `),
+      // 2. Por Día (Directo)
+      pool.query(`
+        SELECT 
+          fecha_solicitud::date AS fecha,
+          COUNT(*) AS total_solicitudes,
+          SUM(CASE WHEN estado_actual = 'completada' THEN 1 ELSE 0 END) AS completadas
+        FROM solicitudes
+        WHERE fecha_solicitud IS NOT NULL
+        GROUP BY fecha_solicitud::date
+        ORDER BY fecha
+      `),
+      // 3. Rendimiento (Directo)
+      pool.query(`
+        SELECT 
+            u.id AS tecnico_id,
+            u.nombre AS tecnico_nombre,
+            COUNT(s.id) AS total_solicitudes,
+            SUM(CASE WHEN s.estado_actual = 'completada' THEN 1 ELSE 0 END) AS completadas
+        FROM usuarios u
+        JOIN solicitudes s ON s.tecnico_id = u.id
+        WHERE u.rol = 'tecnico'
+        GROUP BY u.id, u.nombre
+      `),
+      // 4. Recientes (Directo)
+      pool.query(`
+        SELECT 
+          s.id,
+          s.titulo,
+          c.nombre AS cliente_nombre,
+          c.email AS cliente_email,
+          s.estado_actual,
+          s.prioridad,
+          s.fecha_solicitud,
+          s.direccion_servicio
+        FROM solicitudes s
+        LEFT JOIN clientes c ON s.cliente_id = c.id
+        ORDER BY s.fecha_solicitud DESC
         LIMIT 15
       `),
-      // Nueva consulta: Equipos más solicitados
+      // 5. Equipos (Directo - Ya estaba directo)
       pool.query(`
         SELECT 
           equipo,
