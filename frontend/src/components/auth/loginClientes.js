@@ -2,14 +2,20 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
 import '../../styles/auth.css';
 import { api } from '../../utils/api.js';
+
 const LoginClientes = () => {
   const [credenciales, setCredenciales] = useState({ email: '', password: '' });
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setCredenciales({ ...credenciales, [e.target.name]: e.target.value });
+  };
+
+  const toggleMostrarPassword = () => {
+    setMostrarPassword(!mostrarPassword);
   };
 
   const handleSubmit = async (e) => {
@@ -103,17 +109,27 @@ const LoginClientes = () => {
               <label htmlFor="clientPassword" className="form-label-client">
                 <i className="fas fa-lock me-2"></i>Contraseña
               </label>
-              <input
-                id="clientPassword"
-                type="password"
-                name="password"
-                className="form-control-client"
-                value={credenciales.password}
-                onChange={handleChange}
-                placeholder="Ingrese su contraseña"
-                required
-                disabled={cargando}
-              />
+              <div className="password-input-container">
+                <input
+                  id="clientPassword"
+                  type={mostrarPassword ? "text" : "password"}
+                  name="password"
+                  className="form-control-client"
+                  value={credenciales.password}
+                  onChange={handleChange}
+                  placeholder="Ingrese su contraseña"
+                  required
+                  disabled={cargando}
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={toggleMostrarPassword}
+                  disabled={cargando}
+                >
+                  <i className={`fas ${mostrarPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                </button>
+              </div>
               <div className="forgot-password-client">
                 <Link to="/forgot-password">¿Olvidó su contraseña?</Link>
               </div>
