@@ -1,4 +1,4 @@
-/* ===== ESTILOS DASHBOARD ANALYTICS INFOSER - VERSIÓN FINAL CORREGIDA ===== */
+/* ===== ESTILOS DASHBOARD ANALYTICS INFOSER - VERSIÓN FINAL PULIDA ===== */
 
 /* 1. Contenedor Principal */
 .admin-metricas-container {
@@ -10,12 +10,13 @@
     flex-direction: column;
 }
 
-/* 2. Header */
+/* 2. Header - AJUSTADO */
 .admin-metricas-header {
     background: #ffffff;
-    padding: 1rem 2rem;
+    padding: 0.75rem 2rem;
+    /* Reduje el padding vertical para quitar aire */
     border-bottom: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     z-index: 10;
 }
 
@@ -28,7 +29,7 @@
 .header-left {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .admin-metricas-header h1 {
@@ -41,24 +42,30 @@
     gap: 0.5rem;
 }
 
-/* Botón Volver del Header */
+/* ARREGLO: Botón Volver Sólido (No transparente) */
 .btn-volver {
-    background: transparent;
-    border: 1px solid #e2e8f0;
-    color: #718096;
-    padding: 0.4rem 0.8rem;
+    background-color: #ffffff;
+    /* Fondo blanco sólido */
+    border: 1px solid #cbd5e0;
+    /* Borde un poco más oscuro */
+    color: #4a5568;
+    padding: 0.4rem 1rem;
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.9rem;
+    font-weight: 500;
     transition: all 0.2s;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    /* Sombra suave */
 }
 
 .btn-volver:hover {
-    background: #f7fafc;
-    color: #2d3748;
+    background-color: #edf2f7;
+    border-color: #a0aec0;
+    color: #1a365d;
 }
 
 .header-actions {
@@ -95,18 +102,16 @@
     color: #e53e3e;
 }
 
-/* 3. Layout (Sidebar + Contenido) */
+/* 3. Layout */
 .admin-metricas-layout {
     display: flex;
     flex: 1;
     overflow: hidden;
-    /* Evita scroll doble */
 }
 
-/* 4. Sidebar (Menú Lateral) - ARREGLADO */
+/* 4. Sidebar (Menú Lateral) - AJUSTADO */
 .admin-metricas-sidebar {
-    width: 260px;
-    /* Un poco más ancho para que quepa el texto */
+    width: 250px;
     background: #ffffff;
     border-right: 1px solid #e2e8f0;
     display: flex;
@@ -115,26 +120,23 @@
     flex-shrink: 0;
 }
 
-/* Estilos de los botones del menú (ESTO FALTABA) */
 .sidebar-btn {
     display: flex;
     align-items: center;
     gap: 12px;
-    /* Espacio entre icono y texto */
     width: 100%;
-    padding: 12px 16px;
+    padding: 10px 14px;
+    /* Un poco más compacto */
     border: none;
     background: transparent;
     color: #718096;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 500;
     text-align: left;
     cursor: pointer;
     transition: all 0.2s;
     border-radius: 8px;
-    margin-bottom: 0.5rem;
-    line-height: 1.2;
-    /* Para evitar saltos raros */
+    margin-bottom: 0.25rem;
 }
 
 .sidebar-btn:hover {
@@ -149,55 +151,53 @@
 }
 
 .sidebar-btn i {
-    width: 24px;
-    /* Ancho fijo para alinear iconos */
+    width: 20px;
     text-align: center;
-    font-size: 1.1rem;
 }
 
 /* 5. Contenido Principal */
 .admin-metricas-content {
     flex: 1;
-    padding: 2rem;
+    padding: 1.5rem 2rem;
+    /* Padding ajustado */
     overflow-y: auto;
 }
 
 /* 6. Barra de Filtros */
 .filters-bar {
     background: #ffffff;
-    padding: 1rem 1.5rem;
-    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-    /* Permite bajar si no cabe, pero intenta mantener línea */
+    margin-bottom: 1.5rem;
+    /* Menos margen abajo */
+    border: 1px solid #e2e8f0;
 }
 
 .filter-group {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .filter-group label {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: #718096;
-    white-space: nowrap;
 }
 
 .filter-select {
-    padding: 0.5rem 2rem 0.5rem 1rem;
+    padding: 0.4rem 2rem 0.4rem 0.8rem;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
-    background-color: #f7fafc;
+    background-color: #fff;
     color: #2d3748;
     font-size: 0.9rem;
     cursor: pointer;
-    min-width: 140px;
+    min-width: 130px;
 }
 
 .btn-refresh {
@@ -205,52 +205,46 @@
     background: #3182ce;
     color: #ffffff;
     border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    /* Cuadrado con bordes suaves, más moderno */
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(49, 130, 206, 0.3);
+    box-shadow: 0 1px 3px rgba(49, 130, 206, 0.4);
 }
 
-.btn-refresh:hover {
-    background: #2b6cb0;
-    transform: rotate(180deg);
-    transition: transform 0.3s;
-}
-
-/* 7. KPIs Grid - ARREGLADO PARA SER PARALELO */
+/* 7. KPIs Grid - ARREGLO: 4 EN LÍNEA SIN ESPACIOS GRANDES */
 .kpis-grid {
     display: grid;
-    /* En PC: 4 columnas iguales para que estén todos en una fila */
+    /* Fuerza 4 columnas iguales */
     grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    gap: 1rem;
+    /* Gap reducido para que estén más juntos */
+    margin-bottom: 1.5rem;
 }
 
 .kpi-card {
     background: #ffffff;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+    padding: 1.25rem;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
     gap: 1rem;
-    border: 1px solid transparent;
-    min-width: 0;
-    /* Evita desbordes flex */
+    border: 1px solid #e2e8f0;
 }
 
 .kpi-icon-wrapper {
-    width: 48px;
-    height: 48px;
-    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     flex-shrink: 0;
 }
 
@@ -275,20 +269,20 @@
 }
 
 .kpi-data h3 {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-weight: 700;
     margin: 0;
     color: #2d3748;
 }
 
 .kpi-data p {
-    margin: 0.25rem 0 0 0;
+    margin: 0;
     color: #718096;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 500;
 }
 
-/* 8. Gráficos Grid - DISEÑO 2 ARRIBA, 1 ABAJO */
+/* 8. Gráficos Grid */
 .charts-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -301,39 +295,33 @@
     background: #ffffff;
     border-radius: 12px;
     padding: 1.5rem;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     border: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
 }
 
-/* Gráfico de Línea (Arriba Izquierda) */
 .chart-container.main-chart {
     grid-column: 1;
     grid-row: 1;
 }
 
-/* Gráfico de Barras (Arriba Derecha) */
 .chart-container.side-chart {
     grid-column: 2;
     grid-row: 1;
 }
 
-/* Gráfico de Pastel (Abajo Centrado) */
 .chart-container.equipment-chart {
     grid-column: 1 / -1;
-    /* Ocupa todo el ancho */
     grid-row: 2;
     max-width: 500px;
-    /* Limita ancho para que se vea elegante */
     margin: 0 auto;
-    /* Centra el contenedor */
     width: 100%;
     align-items: center;
 }
 
 .chart-header-simple {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -341,7 +329,7 @@
 
 .chart-header-simple h5 {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #2d3748;
 }
@@ -349,8 +337,7 @@
 .chart-canvas-wrapper {
     position: relative;
     width: 100%;
-    /* Altura consistente */
-    min-height: 300px;
+    min-height: 280px;
 }
 
 .no-data {
@@ -368,20 +355,20 @@
 .recent-table-container {
     background: #ffffff;
     border-radius: 12px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     border: 1px solid #e2e8f0;
     overflow: hidden;
 }
 
 .table-header {
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid #e2e8f0;
     background: #ffffff;
 }
 
 .table-header h5 {
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #2d3748;
 }
@@ -396,28 +383,28 @@
 }
 
 .table th {
-    background: #f7fafc;
+    background: #f9fafb;
     color: #718096;
     font-weight: 600;
     font-size: 0.75rem;
     text-transform: uppercase;
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1.5rem;
     text-align: left;
     border-bottom: 1px solid #e2e8f0;
 }
 
 .table td {
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 1.5rem;
     color: #2d3748;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     border-bottom: 1px solid #e2e8f0;
     vertical-align: middle;
 }
 
 /* 10. Badges */
 .badge {
-    padding: 0.35em 0.8em;
-    font-size: 0.75rem;
+    padding: 0.25em 0.7em;
+    font-size: 0.7rem;
     font-weight: 600;
     border-radius: 20px;
     display: inline-block;
@@ -450,16 +437,13 @@
 
 /* 11. Responsive */
 @media (max-width: 1200px) {
-
-    /* En pantallas medianas (laptops pequeñas), bajamos a 2 columnas de KPIs */
     .kpis-grid {
         grid-template-columns: repeat(2, 1fr);
+        /* 2x2 en pantallas medianas */
     }
 }
 
 @media (max-width: 1024px) {
-
-    /* Gráficos uno debajo del otro en tablets */
     .charts-grid {
         grid-template-columns: 1fr;
     }
@@ -484,11 +468,6 @@
         flex-direction: column;
         align-items: stretch;
     }
-
-    .btn-refresh {
-        width: 100%;
-        border-radius: 6px;
-    }
 }
 
 @media (max-width: 768px) {
@@ -505,6 +484,7 @@
 
     .kpis-grid {
         grid-template-columns: 1fr;
-        /* 1 columna en móvil */
     }
+
+    /* 1 columna en móvil */
 }
