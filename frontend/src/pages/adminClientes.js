@@ -207,6 +207,11 @@ const AdminClientes = () => {
                         cliente.ultimaSolicitud ||
                         '-';
 
+                      const formatFecha = (f) => {
+                        if (!f) return '-';
+                        return new Date(f).toLocaleDateString();
+                      };
+
                       return (
                         <tr key={cliente.id}>
                           <td>
@@ -221,7 +226,9 @@ const AdminClientes = () => {
                               <div>{cliente.telefono || '-'}</div>
                             </div>
                           </td>
-                          <td>{fechaRegistro}</td>
+                          <td>
+                            {formatFecha(cliente.fechaRegistro || cliente.fecha_registro)}
+                          </td>
                           <td>
                             <span
                               className={`badge ${solicitudesActivas > 0
@@ -232,7 +239,9 @@ const AdminClientes = () => {
                               {solicitudesActivas}
                             </span>
                           </td>
-                          <td>{ultimaSolicitud}</td>
+                          <td>
+                            {formatFecha(cliente.ultima_solicitud || cliente.ultimaSolicitud)}
+                          </td>
                           <td>
                             <div className="action-buttons">
                               <button className="btn-small btn-info">

@@ -929,13 +929,17 @@ app.get(
     try {
       const { rows } = await pool.query(
         `SELECT 
-           id,
-           nombre,
-           email,
-           telefono,
-           fecha_registro
-         FROM clientes
-         ORDER BY fecha_registro DESC`
+           c.id,
+           c.nombre,
+           c.email,
+           c.telefono,
+           c.fecha_registro,
+           COUNT(s.id) FILTER (WHERE s.estado_actual NOT IN ('completada', 'cancelada'))::int AS solicitudes_activas,
+           MAX(s.fecha_solicitud) AS ultima_solicitud
+         FROM clientes c
+         LEFT JOIN solicitudes s ON c.id = s.cliente_id
+         GROUP BY c.id
+         ORDER BY c.fecha_registro DESC`
       );
 
       res.json({
