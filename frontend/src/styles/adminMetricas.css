@@ -1,9 +1,20 @@
 /* ===== ESTILOS DASHBOARD ANALYTICS INFOSER - VERSIÓN FINAL PULIDA ===== */
 
+:root {
+    --primary-blue: #1a365d;
+    --secondary-blue: #2d5aa0;
+    --accent-blue: #3182ce;
+    --dark-gray: #2d3748;
+    --medium-gray: #4a5568;
+    --light-gray: #e2e8f0;
+    --white: #ffffff;
+}
+
 /* 1. Contenedor Principal */
 .admin-metricas-container {
     font-family: 'Inter', 'Segoe UI', sans-serif;
-    background: #f7fafc;
+    background: linear-gradient(135deg, #1a365d 0%, #2d5aa0 100%);
+    /* Blue gradient background like Admin Clientes */
     min-height: 100vh;
     color: #2d3748;
     display: flex;
@@ -12,10 +23,11 @@
 
 /* 2. Header - AJUSTADO */
 .admin-metricas-container .admin-metricas-header {
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    /* Transparent/Glassy background */
+    backdrop-filter: blur(10px);
     padding: 0.75rem 2rem;
-    /* Reduje el padding vertical para quitar aire */
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     z-index: 10;
 }
@@ -33,7 +45,8 @@
 }
 
 .admin-metricas-container .admin-metricas-header h1 {
-    color: #1a365d;
+    color: #ffffff;
+    /* White text */
     font-size: 1.25rem;
     font-weight: 700;
     margin: 0;
@@ -42,13 +55,16 @@
     gap: 0.5rem;
 }
 
-/* ARREGLO: Botón Volver Sólido (No transparente) */
+.admin-metricas-container .admin-metricas-header h1 i {
+    color: #ffffff;
+    /* White icon */
+}
+
+/* Botón Volver - Estilo Transparente/Blanco */
 .admin-metricas-container .btn-volver {
-    background-color: #ffffff;
-    /* Fondo blanco sólido */
-    border: 1px solid #cbd5e0;
-    /* Borde un poco más oscuro */
-    color: #4a5568;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
     padding: 0.4rem 1rem;
     border-radius: 6px;
     cursor: pointer;
@@ -58,14 +74,13 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    /* Sombra suave */
+    box-shadow: none;
 }
 
 .admin-metricas-container .btn-volver:hover {
-    background-color: #edf2f7;
-    border-color: #a0aec0;
-    color: #1a365d;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
 }
 
 .admin-metricas-container .header-actions {
@@ -78,11 +93,13 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    color: #ffffff;
+    /* White text for admin info */
 }
 
 .admin-metricas-container .admin-badge {
-    background: #ebf8ff;
-    color: #3182ce;
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
     font-size: 0.8rem;
@@ -92,14 +109,14 @@
 .admin-metricas-container .logout-btn {
     background: transparent;
     border: none;
-    color: #718096;
+    color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
     font-size: 1.1rem;
     transition: color 0.2s;
 }
 
 .admin-metricas-container .logout-btn:hover {
-    color: #e53e3e;
+    color: #ffffff;
 }
 
 /* 3. Layout */
@@ -107,6 +124,8 @@
     display: flex;
     flex: 1;
     overflow: hidden;
+    background: #f7fafc;
+    /* Keep content area light */
 }
 
 /* 4. Sidebar (Menú Lateral) - AJUSTADO */
